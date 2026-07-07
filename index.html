@@ -83,39 +83,58 @@
 <section class="hero" id="hero">
     <div class="container">
         <div class="hero-content">
+            <!-- النص الرئيسي (الجهة اليمنى في العربية) -->
             <div class="hero-text">
                 <div class="hero-badge"><i class="fas fa-crown"></i><span>الوسيط الموثوق في سوريا</span></div>
                 <h1 class="hero-title-ar"><span data-i18n="hero_title">اعثر على</span> <span class="gold-text" data-i18n="hero_title_span">منزل أحلامك</span></h1>                
                 <h2 class="hero-title-en" data-i18n="hero_subtitle">Find Your Dream Property</h2>
                 <p class="hero-description">نقدم لك أفضل العقارات في سوريا بأسعار تنافسية. شقق، فلل، منازل، محلات تجارية و غيرها الكثير. نضمن لك صفقة آمنة وموثوقة مع فريقنا المحترف.</p>
-                <div class="hero-search">
-                    <div class="hero-search-wrapper">
-                        <div class="hero-search-input-group">
-                            <i class="fas fa-search search-icon-hero"></i>
-                            <input type="text" id="heroSearchInput" class="hero-search-input" placeholder=" ابحث عن عقار... (اكتب اسم العقار أو كوده)" autocomplete="off">
-                            <button id="heroClearSearchBtn" class="hero-clear-search" style="display: none;">
-                                <i class="fas fa-times-circle"></i>
-                            </button>
-                        </div>
-                        <div id="heroSearchDropdown" class="hero-search-dropdown" style="display: none;"></div>
+            </div>
+            
+            <!-- ===== الجانب الأيسر (شريط البحث + أزرار + إحصائيات) ===== -->
+            <div class="hero-side-panel">
+                <!-- شريط البحث -->
+                <div class="hero-search-wrapper">
+                    <div class="hero-search-input-group">
+                        <i class="fas fa-search search-icon-hero"></i>
+                        <input type="text" id="heroSearchInput" class="hero-search-input" placeholder=" ابحث عن عقار... (اكتب اسم العقار أو كوده)" autocomplete="off">
+                        <button id="heroClearSearchBtn" class="hero-clear-search" style="display: none;">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
                     </div>
-                    <button class="btn-outline" onclick="openContactModal()" style="margin-top: 15px;">
+                    <div id="heroSearchDropdown" class="hero-search-dropdown" style="display: none;"></div>
+                </div>
+                
+                <!-- الأزرار -->
+                <div class="hero-buttons-row">
+                    <button class="btn-outline" onclick="openContactModal()">
                         <i class="fab fa-whatsapp"></i><span>تواصل مع مستشار</span>
                     </button>
+                    <button class="btn-add-property" onclick="openAddPropertyModal()">
+                        <i class="fas fa-plus-circle"></i>
+                        <span data-i18n="add_property_btn_header">أضف عقارك</span>
+                    </button>
                 </div>
-            </div>
-            <div class="hero-stats" id="heroStats">
-                <div class="stat-card">
-                    <div class="stat-number" id="heroAvailable">0</div>
-                    <div class="stat-label">عقار متاح</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="heroSold">0</div>
-                    <div class="stat-label">تم البيع/الإيجار</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="heroVisitors">0</div>
-                    <div class="stat-label">مجموع الزوار</div>
+                
+                <!-- الإحصائيات -->
+                <div class="hero-stats-luxury">
+                    <div class="stat-card-luxury">
+                        <div class="stat-number-luxury" id="heroAvailable">0</div>
+                        <div class="stat-label-luxury">عقار متاح</div>
+                        <div class="stat-icon-luxury"><i class="fas fa-home"></i></div>
+                    </div>
+                    <div class="stat-divider-luxury"></div>
+                    <div class="stat-card-luxury">
+                        <div class="stat-number-luxury" id="heroSold">0</div>
+                        <div class="stat-label-luxury">تم البيع/الإيجار</div>
+                        <div class="stat-icon-luxury"><i class="fas fa-handshake"></i></div>
+                    </div>
+                    <div class="stat-divider-luxury"></div>
+                    <div class="stat-card-luxury">
+                        <div class="stat-number-luxury" id="heroVisitors">0</div>
+                        <div class="stat-label-luxury">زائر اليوم</div>
+                        <div class="stat-icon-luxury"><i class="fas fa-user-friends"></i></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -262,9 +281,9 @@
 
             <div class="footer-contact">
                 <h4>للراغبين بإضافة عقاراتهم</h4>
-                <button class="footer-contact-btn" onclick="openContactModal()">
-                    <i class="fas fa-headset"></i>
-                    <span>تواصل معنا الآن</span>
+                <button class="footer-contact-btn" onclick="openAddPropertyModal()">
+                    <i class="fas fa-plus-circle"></i>
+                    <span data-i18n="add_property_btn_footer">أضف عقارك الآن</span>
                 </button>
             </div>
 
@@ -303,70 +322,67 @@
 
 <!-- ===== CONTACT MODAL ===== -->
 <div class="modal-overlay" id="contactModal">
-    <div class="modal-container">
+    <div class="modal-container modal-contact">
         <div class="modal-header">
             <div class="modal-title">
-                <i class="fas fa-headset"></i>
-                <h3>تواصل مع فريق عقارات الملك</h3>
+                <i class="fas fa-phone-alt" style="color: var(--primary);"></i>
+                <h3 data-i18n="contact_whatsapp_title">📞 تواصل معنا</h3>
             </div>
             <button class="modal-close" onclick="closeContactModal()">✕</button>
         </div>
         
-        <div id="contactFormBody" class="modal-body">
-            <div class="contact-greeting">
-                <i class="fas fa-smile-wink"></i>
-                <p>أهلاً بك! سجل بياناتك وسنرسل لك تفاصيل العقار على واتساب</p>
+        <div class="modal-body contact-simple-body">
+            <!-- عبارة ترحيبية -->
+            <div class="contact-welcome">
+                <p class="welcome-text" data-i18n="contact_whatsapp_welcome">🌟 نحن هنا لخدمتك! تواصل معنا مباشرة عبر واتساب</p>
+                <p class="welcome-sub" data-i18n="contact_whatsapp_sub">فريق عقارات الملك ينتظر استفسارك</p>
             </div>
-            <input type="hidden" id="contactPropId" value="">
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="firstName">الاسم الأول <span class="required">*</span></label>
-                    <input type="text" id="firstName" class="form-input" placeholder="أدخل اسمك الأول">
+
+            <!-- رقم الهاتف مع زر النسخ -->
+            <div class="phone-display-card">
+                <div class="phone-number-wrapper">
+                    <div class="whatsapp-icon-wrapper">
+                        <i class="fab fa-whatsapp whatsapp-icon"></i>
+                    </div>
+                    <span class="phone-number" id="contactPhoneNumber">+963 932 168 293</span>
+                    <button class="copy-phone-btn" onclick="copyContactPhone()" title="نسخ الرقم">
+                        <i class="fas fa-copy"></i>
+                        <span data-i18n="contact_whatsapp_copy">نسخ</span>
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label for="lastName">الاسم الأخير <span class="required">*</span></label>
-                    <input type="text" id="lastName" class="form-input" placeholder="أدخل اسم العائلة">
-                </div>               
-            </div>
-            
-            <div class="form-group">
-                <label for="phoneNumber">رقم الهاتف <span class="required">*</span></label>
-                <div class="phone-group">
-                    <select id="phoneCountry" class="phone-select"></select>
-                    <input type="tel" id="phoneNumber" class="form-input phone-input" placeholder="987654321">
+                <div class="phone-hint">
+                    <i class="fas fa-clock"></i>
+                    <span data-i18n="contact_whatsapp_available">متاحون على مدار الساعة</span>
                 </div>
             </div>
-            
-            <div class="form-group">
-                <label for="contactNote"><i class="fas fa-pen-alt"></i> ملاحظات إضافية</label>
-                <textarea id="contactNote" rows="3" placeholder="أخبرنا عن احتياجاتك..."></textarea>
+
+            <!-- رمز QR -->
+            <div class="qr-section">
+                <div class="qr-container">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://wa.me/963932168293" 
+                         alt="رمز QR للواتساب" 
+                         class="qr-code"
+                         id="qrCodeImage"
+                         loading="lazy">
+                    <div class="qr-label">
+                        <i class="fas fa-qrcode"></i>
+                        <span data-i18n="contact_whatsapp_scan">امسح الرمز للتواصل مباشرة</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="privacy-consent" style="margin: 15px 0;">
-                <input type="checkbox" id="privacyConsentCheckbox" checked>
-                <label for="privacyConsentCheckbox">
-                    أوافق على تخزين بياناتي ومعالجتها وفقاً لـ <a href="#" onclick="openPrivacyModal(); return false;">سياسة الخصوصية</a>
-                </label>
+
+            <!-- زر فتح واتساب -->
+            <a href="https://wa.me/963932168293" target="_blank" class="whatsapp-main-btn">
+                <i class="fab fa-whatsapp"></i>
+                <span data-i18n="contact_whatsapp_btn">تواصل الآن عبر واتساب</span>
+                <i class="fas fa-arrow-left"></i>
+            </a>
+
+            <!-- رسالة إضافية -->
+            <div class="contact-footer-msg">
+                <i class="fas fa-heart" style="color: var(--primary);"></i>
+                <span data-i18n="contact_whatsapp_footer">نحن متشوقون لمساعدتك في العثور على منزل أحلامك</span>
             </div>
-            
-            <button class="submit-btn" onclick="submitContactRequest()">
-                <i class="fas fa-paper-plane"></i>
-                <span>تأكيد الطلب</span>
-            </button>
-        </div>
-        
-        <div id="contactThanks" class="modal-thanks" style="display:none;">
-            <div class="thanks-icon">✅</div>
-            <h3>تم استلام طلبك بنجاح!</h3>
-            <p id="thanksMessage"></p>
-            <div style="margin: 20px 0;">
-                <p><i class="fab fa-whatsapp" style="color:#25D366;"></i> رقم واتسابنا: <strong>+963 932 168 293</strong></p>
-            </div>
-            <button class="whatsapp-btn" onclick="closeContactModal()">
-                <i class="fas fa-check"></i>
-                <span>إغلاق</span>
-            </button>
         </div>
     </div>
 </div>
@@ -529,15 +545,180 @@
 <!-- ===== FLOATING BUTTON ===== -->
 <div class="floating-contact-btn" onclick="openContactModal()">
     <div class="floating-icon">
-        <i class="fas fa-headset"></i>
+        <i class="fab fa-whatsapp whatsapp-float-icon"></i>
     </div>
     <div class="floating-pulse"></div>
-    <span class="floating-tooltip">طلب استشارة</span>
+    <span class="floating-tooltip">📞 تواصل معنا</span>
 </div>
 
 <!-- ===== TOAST & SCROLL TOP ===== -->
 <div id="toast" class="toast-notification"></div>
 <button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTop()"><i class="fas fa-arrow-up"></i></button>
+
+<!-- ===== ADD PROPERTY MODAL ===== -->
+<div class="modal-overlay" id="addPropertyModal">
+    <div class="modal-container modal-large">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fas fa-plus-circle" style="color: var(--primary);"></i>
+                <h3 data-i18n="add_property_title">إضافة عقار جديد</h3>
+            </div>
+            <button class="modal-close" onclick="closeAddPropertyModal()">✕</button>
+        </div>
+        <div style="background: rgba(201,168,76,0.1); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 1px solid var(--primary);">
+            <i class="fas fa-info-circle" style="color: var(--primary); font-size: 20px;"></i>
+            <p style="margin-top: 5px; font-weight: 500;" data-i18n="add_property_subtitle">يرجى ملء البيانات التالية وسنقوم بإضافة عقارك في أقرب وقت</p>
+            <p style="margin-top: 5px; font-size: 14px; color: var(--gray);" data-i18n="add_property_subtitle_note">📌 يتم تحديد النسبة المئوية بعد التأكيد</p>
+        </div>
+            
+            <form id="addPropertyForm" onsubmit="submitAddProperty(event)">
+                <!-- بيانات المالك -->
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px; color: var(--primary);"><i class="fas fa-user"></i> <span data-i18n="add_property_owner_data">بيانات المالك</span></h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ownerName"><span data-i18n="add_property_owner_name">الاسم الكامل</span> <span class="required">*</span></label>
+                            <input type="text" id="ownerName" class="form-input" data-i18n-placeholder="add_property_owner_name_placeholder" placeholder="أدخل اسمك الكامل" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ownerPhone"><span data-i18n="add_property_owner_phone">رقم الهاتف</span> <span class="required">*</span></label>
+                            <input type="tel" id="ownerPhone" class="form-input" data-i18n-placeholder="add_property_owner_phone_placeholder" placeholder="09XXXXXXXX" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- بيانات العقار -->
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px; color: var(--primary);"><i class="fas fa-building"></i> <span data-i18n="add_property_property_data">بيانات العقار</span></h4>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="propertyTitle"><span data-i18n="add_property_title_label">اسم العقار</span> <span class="required">*</span></label>
+                            <input type="text" id="propertyTitle" class="form-input" data-i18n-placeholder="add_property_title_placeholder" placeholder="مثال: شقة فاخرة في دمشق" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="propertyPrice"><span data-i18n="add_property_price_label">السعر</span> <span class="required">*</span></label>
+                            <input type="text" id="propertyPrice" class="form-input" data-i18n-placeholder="add_property_price_placeholder" placeholder="مثال: 25000$" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="propertyType"><span data-i18n="add_property_type_label">نوع العقار</span> <span class="required">*</span></label>
+                            <select id="propertyType" class="filter-select" required>
+                                <option value="" data-i18n="add_property_type_placeholder">اختر النوع</option>
+                                <option value="apartment" data-i18n="add_property_type_apartment">شقة</option>
+                                <option value="house" data-i18n="add_property_type_house">منزل</option>
+                                <option value="villa" data-i18n="add_property_type_villa">فيلا</option>
+                                <option value="shop" data-i18n="add_property_type_shop">محل تجاري</option>
+                                <option value="land" data-i18n="add_property_type_land">أرض</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="propertyArea"><span data-i18n="add_property_area_label">المساحة (م²)</span> <span class="required">*</span></label>
+                            <input type="number" id="propertyArea" class="form-input" data-i18n-placeholder="add_property_area_placeholder" placeholder="مثال: 150" required>
+                        </div>
+                    </div>
+
+                    <!-- ✅ حقل الموقع (محافظة + منطقة) -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="propertyGovernorate"><span data-i18n="add_property_governorate_label">المحافظة</span> <span class="required">*</span></label>
+                            <select id="propertyGovernorate" class="filter-select" required>
+                                <option value="" data-i18n="add_property_governorate_placeholder">اختر المحافظة</option>
+                                <option value="دمشق">دمشق</option>
+                                <option value="حلب">حلب</option>
+                                <option value="حمص">حمص</option>
+                                <option value="اللاذقية">اللاذقية</option>
+                                <option value="طرطوس">طرطوس</option>
+                                <option value="حماة">حماة</option>
+                                <option value="دير الزور">دير الزور</option>
+                                <option value="الحسكة">الحسكة</option>
+                                <option value="الرقة">الرقة</option>
+                                <option value="إدلب">إدلب</option>
+                                <option value="درعا">درعا</option>
+                                <option value="السويداء">السويداء</option>
+                                <option value="القنيطرة">القنيطرة</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="propertyDistrict"><span data-i18n="add_property_district_label">المنطقة</span> <span class="required">*</span></label>
+                            <input type="text" id="propertyDistrict" class="form-input" data-i18n-placeholder="add_property_district_placeholder" placeholder="مثال: المهاجرين" required>
+                        </div>
+                    </div>
+
+                    <!-- ✅  و التشطيب حقل نوع الملكية -->
+                    <!-- ✅ حقل نوع الملكية + التشطيب (صف واحد) -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="propertyOwnership"><span data-i18n="add_property_ownership_label">نوع الملكية</span></label>
+                            <select id="propertyOwnership" class="filter-select">
+                                <option value="" data-i18n="add_property_ownership_placeholder">اختر نوع الملكية</option>
+                                <option value="طابو أخضر" data-i18n="add_property_ownership_owned">طابو أخضر</option>
+                                <option value="مشاع" data-i18n="add_property_ownership_shared">مشاع (أسهم)</option>
+                                <option value="حكم محكمة" data-i18n="add_property_ownership_court">حكم محكمة</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="propertyFinishing"><span data-i18n="add_property_finishing_label">نوع التشطيب</span></label>
+                            <select id="propertyFinishing" class="filter-select">
+                                <option value="" data-i18n="add_property_finishing_placeholder">اختر نوع التشطيب</option>
+                                <option value="فاخر" data-i18n="add_property_finishing_luxury">فاخر</option>
+                                <option value="جيد" data-i18n="add_property_finishing_good">جيد</option>
+                                <option value="عادي" data-i18n="add_property_finishing_normal">عادي</option>
+                                <option value="غير مكتمل" data-i18n="add_property_finishing_unfinished">غير مكتمل</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="propertyRooms"><span data-i18n="add_property_rooms_label">عدد الغرف</span></label>
+                            <input type="number" id="propertyRooms" class="form-input" data-i18n-placeholder="add_property_rooms_placeholder" placeholder="مثال: 3">
+                        </div>
+                        <div class="form-group">
+                            <label for="propertyBathrooms"><span data-i18n="add_property_bathrooms_label">عدد الحمامات</span></label>
+                            <input type="number" id="propertyBathrooms" class="form-input" data-i18n-placeholder="add_property_bathrooms_placeholder" placeholder="مثال: 2">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="propertyDescription"><span data-i18n="add_property_description_label">وصف العقار</span></label>
+                        <textarea id="propertyDescription" rows="4" class="form-input" data-i18n-placeholder="add_property_description_placeholder" placeholder="اكتب وصفاً مفصلاً للعقار..."></textarea>
+                    </div>
+
+                    <!-- ✅ رفع الصور (سحب وإفلات) -->
+                    <div class="form-group">
+                        <label><span data-i18n="add_property_images_label">صور العقار</span></label>
+                        <div id="dropZone" style="border: 2px dashed #ddd; border-radius: 12px; padding: 30px; text-align: center; background: #fafafa; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 40px; color: var(--primary);"></i>
+                            <p style="margin-top: 10px; color: #666;" data-i18n="add_property_drop_zone">اسحب الصور هنا أو اضغط للاختيار</p>
+                            <input type="file" id="propertyImagesInput" accept="image/*" multiple style="display: none;">
+                            <button type="button" onclick="document.getElementById('propertyImagesInput').click()" style="background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 30px; margin-top: 10px; cursor: pointer;">
+                                <i class="fas fa-plus"></i> <span data-i18n="add_property_select_images">اختر الصور</span>
+                            </button>
+                        </div>
+                        <div id="imagePreview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+                        <input type="hidden" id="propertyImages" value="">
+                    </div>
+
+                    <!-- ✅ رابط الخريطة (اختياري) -->
+                    <div class="form-group">
+                        <label for="propertyMap"><span data-i18n="add_property_map_label">رابط الموقع على الخريطة (اختياري)</span></label>
+                        <input type="text" id="propertyMap" class="form-input" data-i18n-placeholder="add_property_map_placeholder" placeholder="https://www.google.com/maps?q=33.5,36.3">
+                    </div>
+                </div>
+                
+                <!-- تم إزالة خانة الموافقة على سياسة الخصوصية -->
+                
+                <button type="submit" class="submit-btn" style="width: 100%;">
+                    <i class="fas fa-paper-plane"></i>
+                    <span data-i18n="add_property_submit">إرسال طلب الإضافة</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- ===== SCRIPTS ===== -->
 <script>

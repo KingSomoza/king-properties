@@ -12,6 +12,132 @@ const CONFIG = {
 
 const DEFAULT_IMAGE = 'https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png';
 
+// ============================================================
+// إعدادات Cloudinary
+// ============================================================
+
+const CLOUDINARY_CONFIG = {
+    cloudName: 'dkdilpnuc', // ✅ استبدل بـ Cloud Name الخاص بك
+    uploadPreset: 'king_properties' // ✅ استبدل بـ Upload Preset الخاص بك
+};
+
+// ============================================================
+// رفع الصور إلى Cloudinary
+// ============================================================
+
+async function uploadImageToCloudinary(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+    
+    try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('فشل رفع الصورة');
+        }
+        
+        const data = await response.json();
+        return data.secure_url; // رابط الصورة
+    } catch (error) {
+        console.error('❌ خطأ في رفع الصورة:', error);
+        showToast('❌ فشل رفع الصورة، حاول مرة أخرى', 'error');
+        return null;
+    }
+}
+
+// دالة معالجة الملفات
+async function handleFiles(files) {
+    const imagePreview = document.getElementById('imagePreview');
+    const imagesHidden = document.getElementById('propertyImages');
+    let uploadedImages = JSON.parse(imagesHidden.value || '[]');
+    
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+        
+        // مؤشر تحميل
+        const imgWrapper = document.createElement('div');
+        imgWrapper.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid #ddd;flex-shrink:0;background:#f0f0f0;display:flex;align-items:center;justify-content:center;';
+        imgWrapper.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:24px;color:#C9A84C;"></i>';
+        imagePreview.appendChild(imgWrapper);
+        
+        const imageUrl = await uploadImageToCloudinary(file);
+        
+        if (imageUrl) {
+            imgWrapper.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            imgWrapper.appendChild(img);
+            
+            // زر حذف
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '×';
+            removeBtn.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(231,76,60,0.9);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:5;';
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const index = uploadedImages.indexOf(imageUrl);
+                if (index > -1) uploadedImages.splice(index, 1);
+                imgWrapper.remove();
+                imagesHidden.value = JSON.stringify(uploadedImages);
+            });
+            imgWrapper.appendChild(removeBtn);
+            
+            uploadedImages.push(imageUrl);
+            imagesHidden.value = JSON.stringify(uploadedImages);
+        } else {
+            imgWrapper.innerHTML = '<i class="fas fa-exclamation-circle" style="font-size:24px;color:#e74c3c;"></i>';
+            setTimeout(() => imgWrapper.remove(), 3000);
+        }
+    }
+}
+
+// تسجيل الأحداث
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('propertyImagesInput');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    if (!dropZone || !fileInput || !imagePreview) return;
+    
+    dropZone.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            handleFiles(files);
+        }
+        fileInput.value = '';
+    });
+    
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.style.borderColor = '#C9A84C';
+        dropZone.style.background = 'rgba(201,168,76,0.1)';
+    });
+    
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropZone.style.borderColor = '#ddd';
+        dropZone.style.background = '#fafafa';
+    });
+    
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.style.borderColor = '#ddd';
+        dropZone.style.background = '#fafafa';
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFiles(files);
+        }
+    });
+});
 
 let allProperties = [];
 let filteredProperties = [];
@@ -402,6 +528,14 @@ function updatePageTexts() {
     
     const floatingTooltip = document.querySelector('.floating-tooltip');
     if (floatingTooltip) floatingTooltip.innerText = t.hero_contact_btn;
+
+    // تحديث placeholders في نموذج إضافة العقار
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key] !== undefined) {
+        el.placeholder = t[key];
+    }
+});
     
     console.log(`🌐 تم تحديث الصفحة إلى: ${currentLanguage === 'ar' ? 'العربية' : 'English'}`);
 
@@ -941,26 +1075,20 @@ function dotClickHandler(e) {
 }
 
 // ============================================================
-// 7. دوال الإحصائيات
+// 7. دوال الإحصائيات - نظام عداد زوار دقيق
 // ============================================================
 
 async function initStats() {
+    // قراءة العداد من localStorage أولاً
     let visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
     let contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
     
     updateStatsUI(visitors, contacts);
     
-    fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data && data.count) {
-                visitors = data.count;
-                localStorage.setItem('kh_visitors_total', visitors);
-                updateStatsUI(visitors, contacts);
-            }
-        })
-        .catch(err => console.error('خطأ في جلب الزوار:', err));
+    // جلب العداد من الخادم
+    await fetchVisitorCount();
     
+    // جلب عدد الاستفسارات
     fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`)
         .then(res => res.json())
         .then(data => {
@@ -973,11 +1101,87 @@ async function initStats() {
         .catch(err => console.error('خطأ في جلب الاستفسارات:', err));
 }
 
+// دالة جلب عدد الزوار من الخادم
+async function fetchVisitorCount() {
+    try {
+        const response = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`);
+        const data = await response.json();
+        if (data && data.count !== undefined) {
+            const visitors = data.count;
+            localStorage.setItem('kh_visitors_total', visitors);
+            updateStatsUI(visitors, parseInt(localStorage.getItem('kh_contacts_total') || '0'));
+            console.log(`✅ تم تحديث عدد الزوار: ${visitors}`);
+            return visitors;
+        }
+        return null;
+    } catch (error) {
+        console.error('❌ خطأ في جلب عدد الزوار:', error);
+        return null;
+    }
+}
+
+// دالة زيادة عدد الزوار مع فاصل زمني 5 دقائق
+async function incrementVisitorCount() {
+    const now = Date.now();
+    const lastVisitKey = 'kh_last_visit_time';
+    const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
+    const fiveMinutes = 5 * 60 * 1000; // 5 دقائق بالميلي ثانية
+    
+    // التحقق من مرور 5 دقائق منذ آخر تسجيل
+    if (now - lastVisitTime < fiveMinutes) {
+        console.log(`⏳ لم تمر 5 دقائق بعد، انتظر ${Math.ceil((fiveMinutes - (now - lastVisitTime)) / 1000)} ثانية`);
+        return false;
+    }
+    
+    // تحديث وقت الزيارة في localStorage
+    localStorage.setItem(lastVisitKey, now.toString());
+    
+    try {
+        // إرسال طلب إلى الخادم لزيادة العداد
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                type: 'incrementVisitor',
+                timestamp: now
+            })
+        });
+        
+        console.log('✅ تم تسجيل زائر جديد');
+        
+        // تحديث العداد محلياً بعد 1 ثانية (لإعطاء وقت للخادم)
+        setTimeout(async () => {
+            await fetchVisitorCount();
+        }, 1000);
+        
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        return false;
+    }
+}
+
+// دالة زيادة عدد الاستفسارات (للمستخدمين الذين يتواصلون)
+async function incrementContactsCount() {
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'incrementContacts' })
+        });
+        console.log('✅ تم تحديث عداد الاستفسارات');
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
+    }
+}
+
 function updateStatsUI(visitors, contacts) {
     const available = allProperties.filter(p => p.available).length;
     const sold = allProperties.filter(p => !p.available).length;
     
     const elements = {
+        // العناصر القديمة (احتفظ بها للتوافق)
         heroAvailable: available,
         heroSold: sold,
         heroVisitors: visitors,
@@ -985,7 +1189,11 @@ function updateStatsUI(visitors, contacts) {
         statsSold: sold,
         statsVisitors: visitors,
         statsContacts: contacts,
-        totalVisitors: visitors
+        totalVisitors: visitors,
+        // ✅ العناصر الجديدة للإحصائيات المدمجة
+        heroAvailableInline: available,
+        heroSoldInline: sold,
+        heroVisitorsInline: visitors
     };
     
     Object.entries(elements).forEach(([id, value]) => {
@@ -997,27 +1205,20 @@ function updateStatsUI(visitors, contacts) {
 async function autoRefreshStats() {
     console.log('🔄 جاري تحديث الإحصائيات...');
     try {
-        const visitorRes = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`);
-        const visitorData = await visitorRes.json();
-        const visitors = visitorData?.count || 0;
+        // تحديث عدد الزوار
+        await fetchVisitorCount();
         
+        // تحديث عدد الاستفسارات
         const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
         const contactsData = await contactsRes.json();
-        const contacts = contactsData?.count || 0;
+        if (contactsData && contactsData.count !== undefined) {
+            const contacts = contactsData.count;
+            localStorage.setItem('kh_contacts_total', contacts);
+            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            updateStatsUI(visitors, contacts);
+        }
         
-        ['heroVisitors', 'statsVisitors', 'totalVisitors'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerText = visitors;
-        });
-        
-        const statsContacts = document.getElementById('statsContacts');
-        if (statsContacts) statsContacts.innerText = contacts;
-        
-        localStorage.setItem('kh_visitors_total', visitors);
-        localStorage.setItem('kh_contacts_total', contacts);
-        
-        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر، ${contacts} استفسار`);
-    } catch (error) {
+        console.log(`✅ تم تحديث الإحصائيات`);    } catch (error) {
         console.error('❌ فشل تحديث الإحصائيات، إعادة المحاولة بعد 30 ثانية');
         setTimeout(autoRefreshStats, 30000);
         return;
@@ -1111,9 +1312,12 @@ function toggleFavoriteFromModal() {
 // ============================================================
 
 function openContactModal(propId = null) {
-    if (propId) document.getElementById('contactPropId').value = propId;
-    document.getElementById('contactFormBody').style.display = 'block';
-    document.getElementById('contactThanks').style.display = 'none';
+    // إذا كان هناك معرف عقار، احفظه
+    if (propId) {
+        document.getElementById('contactPropId').value = propId;
+    }
+    
+    // إظهار المودال
     document.getElementById('contactModal').classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -1121,6 +1325,34 @@ function openContactModal(propId = null) {
 function closeContactModal() {
     document.getElementById('contactModal').classList.remove('active');
     document.body.style.overflow = '';
+}
+
+// ... دوال أخرى ...
+
+// ============================================================
+// التواصل من مودال العقار
+// ============================================================
+
+function contactFromProperty() {
+    // الحصول على معرف العقار الحالي
+    const propertyId = currentPropertyId;
+    
+    // إغلاق مودال العقار
+    closePropertyModal();
+    
+    // فتح مودال التواصل مع تمرير معرف العقار
+    setTimeout(function() {
+        // فتح المودال مباشرة
+        document.getElementById('contactModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // حفظ معرف العقار
+        if (propertyId) {
+            document.getElementById('contactPropId').value = propertyId;
+        }
+        
+        console.log('✅ تم فتح مودال التواصل للعقار:', propertyId);
+    }, 400);
 }
 
 function validateName(name, fieldName) {
@@ -1175,9 +1407,6 @@ async function submitContactRequest() {
     const phoneCheck = validatePhone(phoneRaw, countryCode);
     if (!phoneCheck.valid) { showToast(phoneCheck.message, 'error'); resetSubmitBtn(submitBtn); return; }
     
-    const privacyConsent = document.getElementById('privacyConsentCheckbox')?.checked;
-    if (!privacyConsent) { showToast('❌ يرجى الموافقة على سياسة الخصوصية', 'error'); resetSubmitBtn(submitBtn); return; }
-    
     const firstName = firstNameCheck.value;
     const lastName = lastNameCheck.value;
     const phoneNumber = phoneCheck.value;
@@ -1200,10 +1429,6 @@ async function submitContactRequest() {
                 note 
             })
         });
-        
-        // ✅ عرض رسالة النجاح فوراً (بدون انتظار incrementContactsCount)
-        document.getElementById('contactFormBody').style.display = 'none';
-        document.getElementById('contactThanks').style.display = 'block';
         
         const thanksMsg = document.getElementById('thanksMessage');
         if (thanksMsg) {
@@ -1540,10 +1765,6 @@ function closePropertyModal() {
     document.body.style.overflow = '';
 }
 
-function contactFromProperty() {
-    closePropertyModal();
-    setTimeout(() => openContactModal(currentPropertyId), 300);
-}
 
 // ============================================================
 // 12. دوال المشاركة والنسخ
@@ -1649,33 +1870,120 @@ function performSmartSearch(searchTerm) {
     }
     
     const term = searchTerm.trim().toLowerCase();
+    
     const results = allProperties.filter(p => {
-        const title = getLocalizedText(p, 'title');
-        return title.toLowerCase().includes(term) || p.id.toLowerCase().includes(term);
+        // البحث في جميع الحقول المتاحة
+        const searchableFields = [
+            p.id,
+            p.title_ar,
+            p.title_en,
+            p.description_ar,
+            p.description_en,
+            p.district_ar,
+            p.district_en,
+            p.governorate_ar,
+            p.governorate_en,
+            p.city_ar,
+            p.city_en,
+            p.location,
+            p.ownership_ar,
+            p.ownership_en,
+            p.type, // sale / rent
+            p.propertyType,
+            p.currency,
+            p.price ? String(p.price) : '',
+            p.area ? String(p.area) : '',
+            p.rooms ? String(p.rooms) : '',
+            p.floor !== undefined ? String(p.floor) : '',
+            p.available !== undefined ? (p.available ? 'متاح' : 'مباع') : '',
+            p.available !== undefined ? (p.available ? 'available' : 'sold') : '',
+        ];
+        
+        // إضافة مدة الإيجار إذا كانت موجودة
+        if (p.rent_period) {
+            searchableFields.push(p.rent_period);
+            if (p.rent_period === 'month') {
+                searchableFields.push('شهرياً', 'monthly');
+            } else if (p.rent_period === 'year') {
+                searchableFields.push('سنوياً', 'yearly');
+            } else if (p.rent_period === 'week') {
+                searchableFields.push('أسبوعياً', 'weekly');
+            }
+        }
+        
+        // إضافة نوع العملية باللغتين
+        if (p.type === 'sale') {
+            searchableFields.push('بيع', 'sale', 'للبيع', 'for sale');
+        } else if (p.type === 'rent') {
+            searchableFields.push('إيجار', 'rent', 'للإيجار', 'for rent');
+        }
+        
+        // إضافة نوع العقار باللغتين
+        const propertyTypes = {
+            'apartment': ['شقة', 'apartment', 'شقّة'],
+            'house': ['منزل', 'house', 'بيت'],
+            'villa': ['فيلا', 'villa'],
+            'shop': ['محل', 'shop', 'متجر', 'تجاري'],
+            'building': ['بناء', 'building', 'عمارة'],
+            'land': ['أرض', 'land']
+        };
+        if (p.propertyType && propertyTypes[p.propertyType]) {
+            searchableFields.push(...propertyTypes[p.propertyType]);
+        }
+        
+        // البحث في جميع الحقول
+        return searchableFields.some(field => {
+            if (!field) return false;
+            return String(field).toLowerCase().includes(term);
+        });
     }).slice(0, 8);
     
     if (!heroSearchDropdown) return;
     
+    const t = translations[currentLanguage] || translations.ar;
+    const noResultsText = currentLanguage === 'ar' ? 'لا توجد نتائج لـ "' : 'No results for "';
+    const propertyTypes = {
+        'apartment': currentLanguage === 'ar' ? 'شقة' : 'Apartment',
+        'house': currentLanguage === 'ar' ? 'منزل' : 'House',
+        'villa': currentLanguage === 'ar' ? 'فيلا' : 'Villa',
+        'shop': currentLanguage === 'ar' ? 'محل تجاري' : 'Shop',
+        'building': currentLanguage === 'ar' ? 'بناء' : 'Building',
+        'land': currentLanguage === 'ar' ? 'أرض' : 'Land'
+    };
+    
     if (results.length === 0) {
-        const noResultsText = currentLanguage === 'ar' ? 'لا توجد نتائج لـ "' : 'No results for "';
         heroSearchDropdown.innerHTML = `<div class="hero-result-item" style="justify-content: center; color: var(--gray);"><i class="fas fa-search"></i> ${noResultsText}${searchTerm}"</div>`;
         heroSearchDropdown.style.display = 'block';
         return;
     }
     
     heroSearchDropdown.innerHTML = results.map(p => {
-        const img = p.images && p.images.length ? p.images[0] : DEFAULT_IMAGE;        const title = getLocalizedText(p, 'title');
+        const img = p.images && p.images.length ? p.images[0] : DEFAULT_IMAGE;
+        const title = getLocalizedText(p, 'title');
         const location = getLocalizedText(p, 'district') || p.district || p.location;
+        const priceDisplay = p.isPriceNumeric ? `${Number(p.price).toLocaleString()} ${p.currency}` : p.price;
+        const typeLabel = p.type === 'sale' ? 
+            (currentLanguage === 'ar' ? '🏷️ للبيع' : '🏷️ For Sale') : 
+            (currentLanguage === 'ar' ? '🔑 للإيجار' : '🔑 For Rent');
+        const propertyType = propertyTypes[p.propertyType] || p.propertyType;
+        const ownership = getLocalizedText(p, 'ownership') || p.ownership_ar || p.ownership_en || '';
+        
         return `<div class="hero-result-item" onclick="selectPropertyFromSearch('${p.id}')">
             <img src="${img}" class="hero-result-image" alt="${title}">
             <div class="hero-result-info">
                 <div class="hero-result-title">${title}</div>
-                <div><span class="hero-result-code">${p.id}</span></div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">
+                    <span class="hero-result-code">${p.id}</span>
+                    <span class="hero-result-type">${typeLabel}</span>
+                    ${propertyType ? `<span class="hero-result-type">${propertyType}</span>` : ''}
+                </div>
                 <div class="hero-result-location"><i class="fas fa-map-marker-alt"></i> ${location}</div>
+                ${ownership ? `<div class="hero-result-ownership"><i class="fas fa-file-contract"></i> ${ownership}</div>` : ''}
             </div>
-            <div class="hero-result-price">${p.isPriceNumeric ? `${Number(p.price).toLocaleString()} ${p.currency}` : p.price}</div>
-            </div>`;
+            <div class="hero-result-price">${priceDisplay}</div>
+        </div>`;
     }).join('');
+    
     heroSearchDropdown.style.display = 'block';
     ensureDropdownAboveAll();
 }
@@ -1945,7 +2253,7 @@ async function loadProperties() {
                     location: row.location || 'موقع غير محدد',
                     lat: Number(row.latitude) || 0,
                     lng: Number(row.longitude) || 0,
-                    images: imagesArray, // ✅ الآن يحمل الشعار إذا لم توجد صور
+                    images: imagesArray,
                     available: isAvailable,
                     views: Number(row.views) || 0,
                     featured: row.featured || 'no',
@@ -1953,10 +2261,10 @@ async function loadProperties() {
                 };
             });
 
-         console.log('📊 تم تحميل العقارات:');
-           allProperties.forEach(p => {
-            console.log(`${p.id}: price=${p.price}, isPriceNumeric=${p.isPriceNumeric}, type=${p.type}`);
-          });
+            console.log('📊 تم تحميل العقارات:');
+            allProperties.forEach(p => {
+                console.log(`${p.id}: price=${p.price}, isPriceNumeric=${p.isPriceNumeric}, type=${p.type}`);
+            });
             
             allProperties.sort((a, b) => {
                 if (a.featured === 'yes' && b.featured !== 'yes') return -1;
@@ -1970,6 +2278,9 @@ async function loadProperties() {
             const soldCount = allProperties.filter(p => !p.available).length;
             console.log(`✅ تم تحميل ${allProperties.length} عقار (${availableCount} متاح, ${soldCount} مباع)`);
             showToast(`✅ تم تحميل ${allProperties.length} عقار`, 'success');
+            
+            // ✅ تسجيل زائر جديد (بعد تحميل العقارات)
+            incrementVisitorCount();
         } else {
             throw new Error('لا توجد بيانات');
         }
@@ -1977,7 +2288,7 @@ async function loadProperties() {
         console.error('❌ خطأ في تحميل البيانات:', error);
         showToast('❌ لا توجد بيانات، يرجى إضافة عقارات', 'error');
         allProperties = [];
-        forceHideLoader(); // ✅ أضف هذا السطر
+        forceHideLoader();
     }
     
     filteredProperties = [...allProperties];
@@ -2197,7 +2508,7 @@ function forceHideLoader() {
 }
 
 // تحديث الإحصائيات كل 10 دقائق
-setInterval(autoRefreshStats, 600000);
+setInterval(autoRefreshStats, 6000000);
 
 // بدء التشغيل
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2254,6 +2565,263 @@ function copyWhatsAppNumber() {
 // 19. تعريف الدوال العامة
 // ============================================================
 
+// ============================================================
+// إضافة عقار جديد (طلب)
+// ============================================================
+
+// فتح نموذج إضافة العقار
+function openAddPropertyModal() {
+    const modal = document.getElementById('addPropertyModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// إغلاق نموذج إضافة العقار
+function closeAddPropertyModal() {
+    const modal = document.getElementById('addPropertyModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// ============================================================
+// رفع الصور (سحب وإفلات)
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('propertyImagesInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const imagesHidden = document.getElementById('propertyImages');
+    let uploadedImages = [];
+
+    // فتح نافذة اختيار الملفات عند الضغط على المنطقة
+    dropZone.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // عند اختيار ملفات
+    fileInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        handleFiles(files);
+    });
+
+    // سحب وإفلات
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--primary)';
+        dropZone.style.background = 'rgba(201,168,76,0.1)';
+    });
+
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropZone.style.borderColor = '#ddd';
+        dropZone.style.background = '#fafafa';
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.style.borderColor = '#ddd';
+        dropZone.style.background = '#fafafa';
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+    });
+
+    function handleFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (!file.type.startsWith('image/')) continue;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgData = e.target.result;
+                uploadedImages.push(imgData);
+                
+                // عرض الصورة المصغرة
+                const imgWrapper = document.createElement('div');
+                imgWrapper.style.position = 'relative';
+                imgWrapper.style.width = '80px';
+                imgWrapper.style.height = '80px';
+                imgWrapper.style.borderRadius = '8px';
+                imgWrapper.style.overflow = 'hidden';
+                imgWrapper.style.border = '1px solid #ddd';
+                
+                const img = document.createElement('img');
+                img.src = imgData;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '×';
+                removeBtn.style.position = 'absolute';
+                removeBtn.style.top = '2px';
+                removeBtn.style.right = '2px';
+                removeBtn.style.background = 'rgba(231,76,60,0.9)';
+                removeBtn.style.color = 'white';
+                removeBtn.style.border = 'none';
+                removeBtn.style.borderRadius = '50%';
+                removeBtn.style.width = '22px';
+                removeBtn.style.height = '22px';
+                removeBtn.style.cursor = 'pointer';
+                removeBtn.style.fontSize = '14px';
+                removeBtn.style.display = 'flex';
+                removeBtn.style.alignItems = 'center';
+                removeBtn.style.justifyContent = 'center';
+                
+                removeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const index = uploadedImages.indexOf(imgData);
+                    if (index > -1) {
+                        uploadedImages.splice(index, 1);
+                    }
+                    imgWrapper.remove();
+                    updateHiddenImages();
+                });
+                
+                imgWrapper.appendChild(img);
+                imgWrapper.appendChild(removeBtn);
+                imagePreview.appendChild(imgWrapper);
+                
+                updateHiddenImages();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function updateHiddenImages() {
+        imagesHidden.value = uploadedImages.join(',');
+    }
+});
+
+// إرسال طلب إضافة العقار إلى Google Sheets
+function submitAddProperty(event) {
+    event.preventDefault();
+    
+    const ownerName = document.getElementById('ownerName')?.value.trim() || '';
+    const ownerPhone = document.getElementById('ownerPhone')?.value.trim() || '';
+    const title = document.getElementById('propertyTitle')?.value.trim() || '';
+    const price = document.getElementById('propertyPrice')?.value.trim() || '';
+    const type = document.getElementById('propertyType')?.value || '';
+    const area = document.getElementById('propertyArea')?.value.trim() || '';
+    const governorate = document.getElementById('propertyGovernorate')?.value || '';
+    const district = document.getElementById('propertyDistrict')?.value.trim() || '';
+    const ownership = document.getElementById('propertyOwnership')?.value || '';
+    const rooms = document.getElementById('propertyRooms')?.value.trim() || '';
+    const bathrooms = document.getElementById('propertyBathrooms')?.value.trim() || '';
+    const finishing = document.getElementById('propertyFinishing')?.value || '';
+    const description = document.getElementById('propertyDescription')?.value.trim() || '';
+    const images = document.getElementById('propertyImages')?.value || '';
+    const mapLink = document.getElementById('propertyMap')?.value.trim() || '';
+    
+    if (!ownerName || !ownerPhone || !title || !price || !type || !area || !governorate || !district || !ownership) {
+        showToast('❌ يرجى تعبئة جميع الحقول المطلوبة', 'error');
+        return;
+    }
+    
+    const message = encodeURIComponent(
+        `📋 طلب إضافة عقار جديد\n\n` +
+        `👤 المالك: ${ownerName}\n` +
+        `📞 الهاتف: ${ownerPhone}\n\n` +
+        `🏠 عنوان العقار: ${title}\n` +
+        `💰 السعر: ${price}\n` +
+        `🏗️ النوع: ${type}\n` +
+        `📐 المساحة: ${area} م²\n` +
+        `📍 المحافظة: ${governorate}\n` +
+        `📍 المنطقة: ${district}\n` +
+        `📄 نوع الملكية: ${ownership}\n` +
+        `🛏️ الغرف: ${rooms || 'غير محدد'}\n` +
+        `🚿 الحمامات: ${bathrooms || 'غير محدد'}\n` +
+        `🔧 التشطيب: ${finishing || 'غير محدد'}\n` +
+        `📝 الوصف: ${description || 'لا يوجد'}\n` +
+        `🖼️ الصور: ${images ? 'تم رفع ' + images.split(',').length + ' صورة' : 'لا توجد'}\n` +
+        `🗺️ رابط الخريطة: ${mapLink || 'لا يوجد'}`
+    );
+    
+    const whatsappUrl = `https://wa.me/${CONFIG.WHATSAPP}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+    
+    closeAddPropertyModal();
+    document.getElementById('addPropertyForm')?.reset();
+    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('propertyImages').value = '';
+    
+    showToast('✅ تم إرسال طلبك بنجاح، سنتواصل معك قريباً', 'success');
+}
+
+// ============================================================
+// إغلاق المودالات عند الضغط خارجها
+// ============================================================
+
+// إغلاق مودال التواصل عند الضغط على الخلفية
+document.getElementById('contactModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeContactModal();
+    }
+});
+
+// إغلاق مودال تفاصيل العقار عند الضغط على الخلفية
+document.getElementById('propertyModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePropertyModal();
+    }
+});
+
+// إغلاق مودال سياسة الخصوصية عند الضغط على الخلفية
+document.getElementById('privacyModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePrivacyModal();
+    }
+});
+
+// إغلاق مودال إضافة عقار عند الضغط على الخلفية
+document.getElementById('addPropertyModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddPropertyModal();
+    }
+});
+
+// ============================================================
+// نسخ رقم الهاتف من مودال التواصل
+// ============================================================
+
+function copyContactPhone() {
+    const phoneNumber = '+963 932 168 293';
+    const btn = document.querySelector('.copy-phone-btn');
+    
+    navigator.clipboard.writeText(phoneNumber).then(() => {
+        // تغيير مظهر الزر مؤقتاً
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
+        btn.classList.add('copied');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('copied');
+        }, 2000);
+        
+        showToast('✅ تم نسخ رقم الهاتف: ' + phoneNumber, 'success');
+    }).catch(() => {
+        // طريقة بديلة للنسخ
+        const textarea = document.createElement('textarea');
+        textarea.value = phoneNumber;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showToast('✅ تم نسخ رقم الهاتف: ' + phoneNumber, 'success');
+        } catch (e) {
+            showToast('❌ فشل النسخ، يرجى نسخ الرقم يدوياً', 'error');
+        }
+        document.body.removeChild(textarea);
+    });
+}
+
 window.filterProperties = filterProperties;
 window.resetFilters = resetFilters;
 window.openPropertyModal = openPropertyModal;
@@ -2280,3 +2848,8 @@ window.selectPropertyFromSearch = selectPropertyFromSearch;
 window.toggleHideSold = toggleHideSold;
 window.copyPropertyLink = copyPropertyLink;
 window.setLanguage = setLanguage;
+window.openAddPropertyModal = openAddPropertyModal;
+window.closeAddPropertyModal = closeAddPropertyModal;
+window.filterProperties = filterProperties;
+window.submitAddProperty = submitAddProperty;
+window.copyContactPhone = copyContactPhone;
