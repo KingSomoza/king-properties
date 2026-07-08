@@ -3566,3 +3566,22 @@ footer {
         gap: 10px;
     }
 }
+
+/* ===== إصلاح المسافة في مودال إضافة العقار ===== */
+#addPropertyModal .modal-body {
+    padding-bottom: 30px !important;
+}
+
+#addPropertyModal .submit-btn {
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+    #addPropertyModal .modal-body {
+        padding-bottom: 20px !important;
+    }
+    
+    #addPropertyModal .submit-btn {
+        margin-bottom: 5px;
+    }
+}

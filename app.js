@@ -17,33 +17,72 @@ const DEFAULT_IMAGE = 'https://res.cloudinary.com/dkdilpnuc/image/upload/v178319
 // ============================================================
 
 const CLOUDINARY_CONFIG = {
-    cloudName: 'dkdilpnuc', // ✅ استبدل بـ Cloud Name الخاص بك
+    cloudName: 'kingsomoza', // ✅ استبدل بـ Cloud Name الخاص بك
     uploadPreset: 'king_properties' // ✅ استبدل بـ Upload Preset الخاص بك
 };
 
 // ============================================================
-// رفع الصور إلى Cloudinary
+// رفع الصور إلى Cloudinary - مع تنظيم المجلدات
 // ============================================================
 
-async function uploadImageToCloudinary(file) {
+async function uploadImageToCloudinary(file, propertyId = null) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
     
+    // ✅ إضافة مجلد بناءً على معرف العقار (إذا كان موجوداً)
+    if (propertyId) {
+        // استخدام معرف العقار كاسم للمجلد
+        const folderName = `properties/${propertyId}`;
+        formData.append('folder', folderName);
+        console.log(`📁 رفع الصورة إلى المجلد: ${folderName}`);
+    } else {
+        // إذا لم يكن هناك معرف، استخدم مجلد مؤقت
+        formData.append('folder', 'properties/temp');
+    }
+    
     try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            throw new Error('فشل رفع الصورة');
+        let attempts = 0;
+        const maxAttempts = 3;
+        let lastError = null;
+
+        while (attempts < maxAttempts) {
+            attempts++;
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.secure_url) {
+                    console.log(`✅ تم رفع الصورة بنجاح: ${data.secure_url}`);
+                    return data.secure_url;
+                } else {
+                    throw new Error('لم يتم استلام رابط الصورة');
+                }
+            } catch (err) {
+                lastError = err;
+                console.warn(`⚠️ محاولة ${attempts}/${maxAttempts} فشلت:`, err.message);
+                
+                if (attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, attempts * 1000));
+                }
+            }
         }
-        
-        const data = await response.json();
-        return data.secure_url; // رابط الصورة
+
+        console.error('❌ فشل رفع الصورة بعد', maxAttempts, 'محاولات:', lastError);
+        showToast(`❌ فشل رفع الصورة: ${lastError?.message || 'حاول مرة أخرى'}`, 'error');
+        return null;
+
     } catch (error) {
-        console.error('❌ خطأ في رفع الصورة:', error);
+        console.error('❌ خطأ غير متوقع في رفع الصورة:', error);
         showToast('❌ فشل رفع الصورة، حاول مرة أخرى', 'error');
         return null;
     }
@@ -2588,119 +2627,161 @@ function closeAddPropertyModal() {
 }
 
 // ============================================================
-// رفع الصور (سحب وإفلات)
+// رفع الصور - أسهل حل
 // ============================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('propertyImagesInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const imagesHidden = document.getElementById('propertyImages');
-    let uploadedImages = [];
+// جلب العناصر
+const fileInput = document.getElementById('propertyImagesInput');
+const dropZone = document.getElementById('dropZone');
+const imagePreview = document.getElementById('imagePreview');
+const imagesHidden = document.getElementById('propertyImages');
 
-    // فتح نافذة اختيار الملفات عند الضغط على المنطقة
-    dropZone.addEventListener('click', function() {
+if (fileInput && dropZone && imagePreview) {
+    console.log('✅ عناصر رفع الصور موجودة');
+    
+    // ===== 1. فتح نافذة اختيار الصور عند النقر على الزر =====
+    const selectBtn = document.getElementById('selectImagesBtn');
+    if (selectBtn) {
+        selectBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ زر اختيار الصور - فتح النافذة');
+            fileInput.click();
+        };
+    }
+    
+    // ===== 2. فتح نافذة اختيار الصور عند النقر على منطقة الإفلات =====
+    dropZone.onclick = function(e) {
+        // إذا كان النقر على الزر أو على الـ input، لا تفعل شيء
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        e.preventDefault();
+        console.log('🖱️ منطقة الإفلات - فتح النافذة');
         fileInput.click();
-    });
-
-    // عند اختيار ملفات
-    fileInput.addEventListener('change', function(e) {
+    };
+    
+    // ===== 3. عند اختيار ملفات =====
+    fileInput.onchange = function(e) {
         const files = e.target.files;
-        handleFiles(files);
-    });
-
-    // سحب وإفلات
-    dropZone.addEventListener('dragover', function(e) {
+        console.log(`📁 تم اختيار ${files.length} ملف`);
+        if (files && files.length > 0) {
+            handleUploadedFiles(files);
+        }
+        // إعادة تعيين قيمة input
+        fileInput.value = '';
+    };
+    
+    // ===== 4. السحب والإفلات =====
+    dropZone.ondragover = function(e) {
         e.preventDefault();
-        dropZone.style.borderColor = 'var(--primary)';
-        dropZone.style.background = 'rgba(201,168,76,0.1)';
-    });
-
-    dropZone.addEventListener('dragleave', function(e) {
+        this.style.borderColor = '#C9A84C';
+        this.style.background = 'rgba(201,168,76,0.1)';
+    };
+    
+    dropZone.ondragleave = function(e) {
         e.preventDefault();
-        dropZone.style.borderColor = '#ddd';
-        dropZone.style.background = '#fafafa';
-    });
-
-    dropZone.addEventListener('drop', function(e) {
+        this.style.borderColor = '#ddd';
+        this.style.background = '#fafafa';
+    };
+    
+    dropZone.ondrop = function(e) {
         e.preventDefault();
-        dropZone.style.borderColor = '#ddd';
-        dropZone.style.background = '#fafafa';
+        this.style.borderColor = '#ddd';
+        this.style.background = '#fafafa';
         const files = e.dataTransfer.files;
-        handleFiles(files);
-    });
-
-    function handleFiles(files) {
+        console.log(`📁 تم إسقاط ${files.length} ملف`);
+        if (files && files.length > 0) {
+            handleUploadedFiles(files);
+        }
+    };
+    
+    // ===== 5. معالجة الملفات المرفوعة =====
+    async function handleUploadedFiles(files) {
+        if (!imagePreview || !imagesHidden) return;
+        
+        // الحصول على معرف العقار من النموذج (إذا كان موجوداً)
+        const propertyIdInput = document.getElementById('propertyId');
+        const propertyId = propertyIdInput ? propertyIdInput.value : null;
+        
+        let currentImages = [];
+        try {
+            currentImages = JSON.parse(imagesHidden.value || '[]');
+        } catch {
+            currentImages = [];
+        }
+        
+        let successCount = 0;
+        
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            if (!file.type.startsWith('image/')) continue;
+            if (!file.type.startsWith('image/')) {
+                console.log(`⚠️ ${file.name} ليس صورة`);
+                continue;
+            }
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgData = e.target.result;
-                uploadedImages.push(imgData);
-                
-                // عرض الصورة المصغرة
-                const imgWrapper = document.createElement('div');
-                imgWrapper.style.position = 'relative';
-                imgWrapper.style.width = '80px';
-                imgWrapper.style.height = '80px';
-                imgWrapper.style.borderRadius = '8px';
-                imgWrapper.style.overflow = 'hidden';
-                imgWrapper.style.border = '1px solid #ddd';
-                
+            console.log(`📤 رفع: ${file.name}`);
+            
+            // إضافة مؤشر تحميل
+            const imgWrapper = document.createElement('div');
+            imgWrapper.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid #ddd;flex-shrink:0;background:#f0f0f0;display:flex;align-items:center;justify-content:center;';
+            imgWrapper.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:24px;color:#C9A84C;"></i>';
+            imagePreview.appendChild(imgWrapper);
+            
+            // ✅ رفع الصورة مع معرف العقار
+            const imageUrl = await uploadImageToCloudinary(file, propertyId);
+            
+            if (imageUrl) {
+                imgWrapper.innerHTML = '';
                 const img = document.createElement('img');
-                img.src = imgData;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
+                img.src = imageUrl;
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                imgWrapper.appendChild(img);
                 
+                // زر حذف
                 const removeBtn = document.createElement('button');
                 removeBtn.innerHTML = '×';
-                removeBtn.style.position = 'absolute';
-                removeBtn.style.top = '2px';
-                removeBtn.style.right = '2px';
-                removeBtn.style.background = 'rgba(231,76,60,0.9)';
-                removeBtn.style.color = 'white';
-                removeBtn.style.border = 'none';
-                removeBtn.style.borderRadius = '50%';
-                removeBtn.style.width = '22px';
-                removeBtn.style.height = '22px';
-                removeBtn.style.cursor = 'pointer';
-                removeBtn.style.fontSize = '14px';
-                removeBtn.style.display = 'flex';
-                removeBtn.style.alignItems = 'center';
-                removeBtn.style.justifyContent = 'center';
-                
-                removeBtn.addEventListener('click', function(e) {
+                removeBtn.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(231,76,60,0.9);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:5;';
+                removeBtn.onclick = function(e) {
                     e.stopPropagation();
-                    const index = uploadedImages.indexOf(imgData);
+                    const index = currentImages.indexOf(imageUrl);
                     if (index > -1) {
-                        uploadedImages.splice(index, 1);
+                        currentImages.splice(index, 1);
+                        imagesHidden.value = JSON.stringify(currentImages);
                     }
                     imgWrapper.remove();
-                    updateHiddenImages();
-                });
-                
-                imgWrapper.appendChild(img);
+                };
                 imgWrapper.appendChild(removeBtn);
-                imagePreview.appendChild(imgWrapper);
                 
-                updateHiddenImages();
-            };
-            reader.readAsDataURL(file);
+                currentImages.push(imageUrl);
+                imagesHidden.value = JSON.stringify(currentImages);
+                successCount++;
+                console.log(`✅ رفع: ${file.name}`);
+            } else {
+                imgWrapper.innerHTML = '<i class="fas fa-exclamation-circle" style="font-size:24px;color:#e74c3c;"></i>';
+                setTimeout(() => {
+                    if (imgWrapper.parentNode) imgWrapper.remove();
+                }, 3000);
+            }
         }
-    }
+        
+        if (successCount > 0) {
+            showToast(`✅ تم رفع ${successCount} صورة بنجاح`, 'success');
+        } else {
+            showToast('❌ فشل رفع الصور، تأكد من إعدادات Cloudinary', 'error');
+        }
+    } // ✅ إغلاق دالة handleUploadedFiles
+} // ✅ إغلاق if
+else {
+    console.error('❌ عناصر رفع الصور غير موجودة');
+} // ✅ إغلاق else
 
-    function updateHiddenImages() {
-        imagesHidden.value = uploadedImages.join(',');
-    }
-});
-
+// ============================================================
 // إرسال طلب إضافة العقار إلى Google Sheets
-function submitAddProperty(event) {
+// ============================================================
+
+async function submitAddProperty(event) {
     event.preventDefault();
     
+    // جلب البيانات من النموذج
     const ownerName = document.getElementById('ownerName')?.value.trim() || '';
     const ownerPhone = document.getElementById('ownerPhone')?.value.trim() || '';
     const title = document.getElementById('propertyTitle')?.value.trim() || '';
@@ -2717,39 +2798,103 @@ function submitAddProperty(event) {
     const images = document.getElementById('propertyImages')?.value || '';
     const mapLink = document.getElementById('propertyMap')?.value.trim() || '';
     
+    // التحقق من الحقول المطلوبة
     if (!ownerName || !ownerPhone || !title || !price || !type || !area || !governorate || !district || !ownership) {
         showToast('❌ يرجى تعبئة جميع الحقول المطلوبة', 'error');
         return;
     }
     
-    const message = encodeURIComponent(
-        `📋 طلب إضافة عقار جديد\n\n` +
-        `👤 المالك: ${ownerName}\n` +
-        `📞 الهاتف: ${ownerPhone}\n\n` +
-        `🏠 عنوان العقار: ${title}\n` +
-        `💰 السعر: ${price}\n` +
-        `🏗️ النوع: ${type}\n` +
-        `📐 المساحة: ${area} م²\n` +
-        `📍 المحافظة: ${governorate}\n` +
-        `📍 المنطقة: ${district}\n` +
-        `📄 نوع الملكية: ${ownership}\n` +
-        `🛏️ الغرف: ${rooms || 'غير محدد'}\n` +
-        `🚿 الحمامات: ${bathrooms || 'غير محدد'}\n` +
-        `🔧 التشطيب: ${finishing || 'غير محدد'}\n` +
-        `📝 الوصف: ${description || 'لا يوجد'}\n` +
-        `🖼️ الصور: ${images ? 'تم رفع ' + images.split(',').length + ' صورة' : 'لا توجد'}\n` +
-        `🗺️ رابط الخريطة: ${mapLink || 'لا يوجد'}`
-    );
+    // تعطيل الزر أثناء الإرسال
+    const submitBtn = document.querySelector('#addPropertyForm .submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+    }
     
-    const whatsappUrl = `https://wa.me/${CONFIG.WHATSAPP}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    showToast('📤 جاري إرسال طلبك...', 'info');
     
-    closeAddPropertyModal();
-    document.getElementById('addPropertyForm')?.reset();
-    document.getElementById('imagePreview').innerHTML = '';
-    document.getElementById('propertyImages').value = '';
-    
-    showToast('✅ تم إرسال طلبك بنجاح، سنتواصل معك قريباً', 'success');
+    try {
+        // ===== 1. إرسال البيانات إلى Google Sheets =====
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'addProperty',  // نوع الطلب
+                ownerName: ownerName,
+                ownerPhone: ownerPhone,
+                propertyTitle: title,
+                propertyPrice: price,
+                propertyType: type,
+                propertyArea: area,
+                governorate: governorate,
+                district: district,
+                ownership: ownership,
+                rooms: rooms || 'غير محدد',
+                bathrooms: bathrooms || 'غير محدد',
+                finishing: finishing || 'غير محدد',
+                description: description || 'لا يوجد',
+                images: images,
+                mapLink: mapLink || 'لا يوجد',
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        console.log('✅ تم إرسال طلب إضافة العقار إلى Google Sheets');
+        
+        // ===== 2. إرسال إشعار عبر WhatsApp (اختياري) =====
+        // يمكنك إزالة هذا الجزء إذا كنت لا تريد إرسال إشعار
+        try {
+            const message = encodeURIComponent(
+                `📋 طلب إضافة عقار جديد\n\n` +
+                `👤 المالك: ${ownerName}\n` +
+                `📞 الهاتف: ${ownerPhone}\n\n` +
+                `🏠 عنوان العقار: ${title}\n` +
+                `💰 السعر: ${price}\n` +
+                `🏗️ النوع: ${type}\n` +
+                `📐 المساحة: ${area} م²\n` +
+                `📍 المحافظة: ${governorate}\n` +
+                `📍 المنطقة: ${district}\n` +
+                `📄 نوع الملكية: ${ownership}\n` +
+                `🛏️ الغرف: ${rooms || 'غير محدد'}\n` +
+                `🚿 الحمامات: ${bathrooms || 'غير محدد'}\n` +
+                `🔧 التشطيب: ${finishing || 'غير محدد'}\n` +
+                `📝 الوصف: ${description || 'لا يوجد'}\n` +
+                `🖼️ الصور: ${images ? 'تم رفع ' + images.split(',').length + ' صورة' : 'لا توجد'}\n` +
+                `🗺️ رابط الخريطة: ${mapLink || 'لا يوجد'}`
+            );
+            
+            // فتح واتساب في علامة تبويب جديدة (اختياري)
+            // window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${message}`, '_blank');
+            
+            console.log('✅ تم إرسال إشعار واتساب');
+        } catch (whatsappError) {
+            console.warn('⚠️ فشل إرسال إشعار واتساب:', whatsappError);
+        }
+        
+        // ===== 3. عرض رسالة النجاح =====
+        showToast('✅ تم إرسال طلبك بنجاح، سيتم مراجعته قريباً', 'success');
+        
+        // إعادة تعيين النموذج
+        document.getElementById('addPropertyForm')?.reset();
+        document.getElementById('imagePreview').innerHTML = '';
+        document.getElementById('propertyImages').value = '';
+        
+        // إغلاق المودال بعد ثانيتين
+        setTimeout(() => {
+            closeAddPropertyModal();
+        }, 2000);
+        
+    } catch (error) {
+        console.error('❌ خطأ في إرسال الطلب:', error);
+        showToast('❌ حدث خطأ، يرجى المحاولة مرة أخرى', 'error');
+    } finally {
+        // إعادة تمكين الزر
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> <span data-i18n="add_property_submit">إرسال طلب الإضافة</span>';
+        }
+    }
 }
 
 // ============================================================
