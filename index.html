@@ -12,14 +12,14 @@
         <!-- ===== Open Graph Meta Tags ===== -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="https://king-properties.pages.dev/">
-        <meta property="og:image" content="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png">
+        <meta property="og:image" content="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="عقارات الملك - العقارات الفاخرة في سوريا | King Properties - Luxury Real Estate in Syria">
         
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:image" content="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png">
+        <meta name="twitter:image" content="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png">
         
         <!-- سيتم تحديث هذه القيم بواسطة JavaScript -->
         <meta name="description" id="metaDescription" content="عقارات الملك - دليلك الموثوق لشراء وتأجير العقارات في سوريا">
@@ -43,9 +43,11 @@
 <!-- ===== PRELOADER ===== -->
 <div id="preloader">
     <div class="preloader-content">
-        <img src="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="preloader-logo">
-        <div class="preloader-text">King Properties</div>
-        <div class="preloader-dots"><span></span><span></span><span></span></div>
+        <img src="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="preloader-logo">
+        <!-- تم إزالة كلمة "King Properties" -->
+        <div class="preloader-dots">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
     </div>
 </div>
 
@@ -54,7 +56,7 @@
     <div class="container">
         <div class="header-wrapper">
             <a href="#" class="logo">
-                <img src="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="logo-img">
+                <img src="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="logo-img">
                 <div class="logo-text">
                     <span class="logo-ar">عقارات الملك</span>
                     <span class="logo-en">KING PROPERTIES</span>
@@ -97,7 +99,7 @@
                 <div class="hero-search-wrapper">
                     <div class="hero-search-input-group">
                         <i class="fas fa-search search-icon-hero"></i>
-                        <input type="text" id="heroSearchInput" class="hero-search-input" placeholder=" ابحث عن عقار... (اكتب اسم العقار أو كوده)" autocomplete="off">
+                        <input type="text" id="heroSearchInput" class="hero-search-input" placeholder="ابحث عن عقار... (اكتب اسم العقار أو كوده)" autocomplete="off">
                         <button id="heroClearSearchBtn" class="hero-clear-search" style="display: none;">
                             <i class="fas fa-times-circle"></i>
                         </button>
@@ -153,8 +155,14 @@
         </div>
         <div class="filters-wrapper" id="filtersWrapper">
             <div class="filters-grid">
-                <div class="filter-group"><label><i class="fas fa-tag"></i> نوع العملية</label><select id="filterType" class="filter-select"><option value="">الكل</option><option value="sale">🏷️ للبيع</option><option value="rent">🔑 للإيجار</option></select></div>
-                <div class="filter-group"><label><i class="fas fa-building"></i> نوع العقار</label><select id="filterPropType" class="filter-select"><option value="">الكل</option><option value="apartment">🏢 شقة</option><option value="house">🏠 منزل</option><option value="villa">🏰 فيلا</option><option value="shop">🏪 محل تجاري</option><option value="building">🏗️ بناء كامل</option><option value="land">🌾 أرض</option></select></div>
+                <div class="filter-group"><label><i class="fas fa-tag"></i> نوع العملية</label><select id="filterType" class="filter-select"><option value="">الكل</option><option value="sale"><i class="fas fa-tag"></i> للبيع</option>
+                    <option value="rent"><i class="fas fa-key"></i> للإيجار</option></select></div>
+                <div class="filter-group"><label><i class="fas fa-building"></i> نوع العقار</label><select id="filterPropType" class="filter-select"><option value="">الكل</option><option value="apartment"><i class="fas fa-building"></i> شقة</option>
+                    <option value="house"><i class="fas fa-home"></i> منزل</option>
+                    <option value="villa"><i class="fas fa-crown"></i> فيلا</option>
+                    <option value="shop"><i class="fas fa-store"></i> محل تجاري</option>
+                    <option value="building"><i class="fas fa-city"></i> بناء كامل</option>
+                    <option value="land"><i class="fas fa-tree"></i> أرض</option></select></div>
                 
                 <div class="filter-group">
                     <label><i class="fas fa-city"></i> المحافظة</label>
@@ -247,7 +255,7 @@
         <div class="footer-grid">
             <div class="footer-about">
                 <div class="footer-logo">
-                    <img src="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="logo-img">
+                    <img src="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="logo-img">
                     <div>
                         <span class="logo-ar">عقارات الملك</span>
                         <span class="logo-en">KING PROPERTIES</span>
@@ -326,7 +334,7 @@
         <div class="modal-header">
             <div class="modal-title">
                 <i class="fas fa-phone-alt" style="color: var(--primary);"></i>
-                <h3 data-i18n="contact_whatsapp_title">📞 تواصل معنا</h3>
+                <h3 data-i18n="contact_whatsapp_title"><i class="fas fa-phone-alt"></i> تواصل معنا</h3>
             </div>
             <button class="modal-close" onclick="closeContactModal()">✕</button>
         </div>
@@ -334,7 +342,7 @@
         <div class="modal-body contact-simple-body">
             <!-- عبارة ترحيبية -->
             <div class="contact-welcome">
-                <p class="welcome-text" data-i18n="contact_whatsapp_welcome">🌟 نحن هنا لخدمتك! تواصل معنا مباشرة عبر واتساب</p>
+                <p class="welcome-text" data-i18n="contact_whatsapp_welcome"><i class="fas fa-star" style="color: var(--primary);"></i> نحن هنا لخدمتك! تواصل معنا مباشرة عبر واتساب</p>
                 <p class="welcome-sub" data-i18n="contact_whatsapp_sub">فريق عقارات الملك ينتظر استفسارك</p>
             </div>
 
@@ -397,12 +405,33 @@
         <div class="modal-body property-detail-body">
             <div class="property-gallery">
                 <div class="gallery-main" id="galleryMain">
-                    <img id="propModalImg" src="">
-                    <div class="gallery-nav">
-                        <button class="gallery-nav-btn prev" onclick="prevPropImg()">❮</button>
-                        <button class="gallery-nav-btn next" onclick="nextPropImg()">❯</button>
+                    <!-- زر التكبير - موجود بشكل ثابت -->
+                    <button class="zoom-btn" id="zoomBtn" onclick="openZoom()" title="تكبير الصورة">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                
+                    <!-- سيتم إضافة الصور/الفيديو هنا بواسطة JavaScript -->
+                    <!-- نافذة التكبير -->
+                    <div class="zoom-overlay" id="zoomOverlay" onclick="closeZoom()">
+                        <img id="zoomImage" src="" alt="صورة مكبرة">
+                        <video id="zoomVideo" src="" controls style="display:none;"></video>
+                        <button class="zoom-close-btn" id="zoomCloseBtn" onclick="closeZoom()">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <div class="image-counter" id="imageCounter"></div>
+                    
+                    <!-- أزرار التنقل - تظهر دائماً -->
+                    <div class="gallery-nav">
+                        <button class="gallery-nav-btn prev" onclick="prevPropImg()" aria-label="السابق">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button class="gallery-nav-btn next" onclick="nextPropImg()" aria-label="التالي">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- عداد الصور -->
+                    <div class="image-counter" id="imageCounter">0/0</div>
                 </div>
                 <div class="gallery-thumbs" id="galleryThumbs"></div>
             </div>
@@ -568,7 +597,7 @@
         <div style="background: rgba(201,168,76,0.1); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 1px solid var(--primary);">
             <i class="fas fa-info-circle" style="color: var(--primary); font-size: 20px;"></i>
             <p style="margin-top: 5px; font-weight: 500;" data-i18n="add_property_subtitle">يرجى ملء البيانات التالية وسنقوم بإضافة عقارك في أقرب وقت</p>
-            <p style="margin-top: 5px; font-size: 14px; color: var(--gray);" data-i18n="add_property_subtitle_note">📌 يتم تحديد النسبة المئوية بعد التأكيد</p>
+            <p style="margin-top: 5px; font-size: 16px; color: var(--primary); font-weight: 700;" data-i18n="add_property_commission">💰 نسبة العمولة هي 2%</p>
         </div>
             
             <form id="addPropertyForm" onsubmit="submitAddProperty(event)">
@@ -598,7 +627,7 @@
                         </div>
                         <div class="form-group">
                             <label for="propertyPrice"><span data-i18n="add_property_price_label">السعر</span> <span class="required">*</span></label>
-                            <input type="text" id="propertyPrice" class="form-input" data-i18n-placeholder="add_property_price_placeholder" placeholder="مثال: 25000$" required>
+                            <input type="text" id="propertyPrice" class="form-input" data-i18n-placeholder="add_property_price_placeholder" placeholder="مثال: 25000$">
                         </div>
                     </div>
                     
@@ -661,12 +690,12 @@
                         </div>
                         <div class="form-group">
                             <label for="propertyFinishing"><span data-i18n="add_property_finishing_label">نوع التشطيب</span></label>
-                            <select id="propertyFinishing" class="filter-select">
+                            <select id="propertyFinishing" class="filter-select" required>
                                 <option value="" data-i18n="add_property_finishing_placeholder">اختر نوع التشطيب</option>
                                 <option value="فاخر" data-i18n="add_property_finishing_luxury">فاخر</option>
                                 <option value="جيد" data-i18n="add_property_finishing_good">جيد</option>
                                 <option value="عادي" data-i18n="add_property_finishing_normal">عادي</option>
-                                <option value="غير مكتمل" data-i18n="add_property_finishing_unfinished">غير مكتمل</option>
+                                <option value="على العضم" data-i18n="add_property_finishing_shell">على العضم</option>
                             </select>
                         </div>
                     </div>
@@ -674,11 +703,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="propertyRooms"><span data-i18n="add_property_rooms_label">عدد الغرف</span></label>
-                            <input type="number" id="propertyRooms" class="form-input" data-i18n-placeholder="add_property_rooms_placeholder" placeholder="مثال: 3">
+                            <input type="number" id="propertyRooms" class="form-input" data-i18n-placeholder="add_property_rooms_placeholder" placeholder="مثال: 3" required>
                         </div>
                         <div class="form-group">
                             <label for="propertyBathrooms"><span data-i18n="add_property_bathrooms_label">عدد الحمامات</span></label>
-                            <input type="number" id="propertyBathrooms" class="form-input" data-i18n-placeholder="add_property_bathrooms_placeholder" placeholder="مثال: 2">
+                            <input type="number" id="propertyBathrooms" class="form-input" data-i18n-placeholder="add_property_bathrooms_placeholder" placeholder="مثال: 2" required>
                         </div>
                     </div>
                     

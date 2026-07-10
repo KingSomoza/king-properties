@@ -71,15 +71,16 @@ body {
     text-align: center;
 }
 .preloader-logo {
-    width: 180px;
-    height: 180px;
-    max-width: 70vw;
-    max-height: 70vw;
+    width: 280px; /* تم التكبير من 180px إلى 280px */
+    height: 280px;
+    max-width: 80vw;
+    max-height: 80vw;
     object-fit: contain;
-    margin-bottom: 20px;
-    animation: crownPulse 1.5s ease-in-out infinite;
+    margin-bottom: 30px;
+    /* تم إزالة animation: crownPulse */
 }
 .preloader-text {
+    display: none; /* إخفاء النص */
     font-size: 24px;
     font-weight: 700;
     color: var(--primary);
@@ -88,18 +89,24 @@ body {
 }
 .preloader-dots {
     display: flex;
-    gap: 10px;
+    gap: 12px; /* زيادة المسافة بين النقاط */
     justify-content: center;
+    margin-top: 10px;
 }
+
 .preloader-dots span {
-    width: 10px;
-    height: 10px;
+    width: 14px; /* تكبير النقاط قليلاً */
+    height: 14px;
     background: var(--primary);
     border-radius: 50%;
     animation: dotsPulse 1.5s ease-in-out infinite;
 }
-.preloader-dots span:nth-child(2) { animation-delay: 0.3s; }
-.preloader-dots span:nth-child(3) { animation-delay: 0.6s; }
+
+.preloader-dots span:nth-child(1) { animation-delay: 0s; }
+.preloader-dots span:nth-child(2) { animation-delay: 0.15s; }
+.preloader-dots span:nth-child(3) { animation-delay: 0.3s; }
+.preloader-dots span:nth-child(4) { animation-delay: 0.45s; }
+.preloader-dots span:nth-child(5) { animation-delay: 0.6s; }
 
 @keyframes crownPulse {
     0%, 100% { transform: scale(1); opacity: 1; }
@@ -119,6 +126,7 @@ header {
     left: 0;
     width: 100%;
     background: rgba(255,255,255,0.95);
+    background: #ffffff;
     backdrop-filter: blur(10px);
     box-shadow: var(--shadow-sm);
     z-index: 1000;
@@ -280,7 +288,7 @@ html[dir="ltr"] .lang-btn:last-child { border-radius: 0 40px 40px 0; }
             rgba(26, 20, 16, 0.7) 100%
         ),
         /* الصورة */
-        url('https://res.cloudinary.com/dkdilpnuc/image/upload/v1783203152/king-houses-header-bg_h3klgm.webp') center/cover no-repeat;
+        url('https://res.cloudinary.com/kingsomoza/image/upload/v1783203152/king-houses-header-bg_h3klgm.webp') center/cover no-repeat;
     background-attachment: fixed;
 }
 
@@ -2211,7 +2219,9 @@ textarea.form-input {
 /* ============================================
    UTILITIES
    ============================================ */
-.card-main-img { loading: lazy; }
+.card-main-img { 
+    /* loading: lazy; تم إزالتها لأنها ليست خاصية CSS */
+}
 .property-card { will-change: transform; transform: translateZ(0); }
 .filters-wrapper { max-height: 80vh; overflow-y: auto; }
 html[dir="ltr"] .container,
@@ -3584,4 +3594,1416 @@ footer {
     #addPropertyModal .submit-btn {
         margin-bottom: 5px;
     }
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR - احترافي
+   ============================================ */
+
+/* ===== للمتصفحات التي تدعم WebKit (Chrome, Safari, Edge, Opera) ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+/* مسار التمرير (الخلفية) */
+::-webkit-scrollbar-track {
+    background: var(--secondary);
+    border-radius: 10px;
+}
+
+/* المقبض (الجزء المتحرك) */
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 10px;
+    border: 2px solid var(--secondary);
+    transition: all 0.3s ease;
+}
+
+/* المقبض عند التمرير فوقه */
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--primary-light), var(--primary));
+    border-color: var(--primary-light);
+    transform: scale(1.05);
+}
+
+/* ===== للمتصفحات التي تدعم Firefox ===== */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--secondary);
+}
+
+/* ===== تخصيص إضافي للشاشات الكبيرة ===== */
+@media (min-width: 1024px) {
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        border-radius: 12px;
+    }
+}
+
+/* ===== للجوال (تصغير الشريط) ===== */
+@media (max-width: 768px) {
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        border-radius: 6px;
+        border-width: 1px;
+    }
+}
+
+/* ============================================
+   ICONS STYLING - أيقونات موحدة
+   ============================================ */
+
+/* أيقونات في البطاقات */
+.card-badges .badge-type i,
+.card-badges .badge-type svg {
+    margin-left: 5px;
+}
+
+/* أيقونة المميز */
+.featured-badge i {
+    color: #FFD700;
+    margin-left: 5px;
+}
+
+/* أيقونات الفلاتر */
+.filter-group label i {
+    color: var(--primary);
+    margin-left: 5px;
+    width: 18px;
+    text-align: center;
+}
+
+/* أيقونات خيارات select */
+.filter-select option i {
+    margin-left: 5px;
+}
+
+/* أيقونات في مودال التواصل */
+.contact-welcome .welcome-text i {
+    color: var(--primary);
+    margin-left: 8px;
+}
+
+/* أيقونة السعر النصي */
+.price-contact i {
+    color: var(--primary);
+    margin-left: 6px;
+}
+
+/* أيقونات المودال */
+.modal-title i {
+    margin-left: 10px;
+    color: var(--primary);
+}
+
+/* أيقونات الإحصائيات */
+.hero-stats-luxury .stat-icon-luxury i {
+    color: var(--primary);
+}
+
+/* أيقونات الفوتر */
+.footer-stat-item i {
+    color: var(--primary);
+}
+
+/* ===== تحسين عرض الشرائح في المودال ===== */
+
+/* حاوية المعرض الرئيسية */
+#galleryMain {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    max-height: 600px;
+    background: #0a0a0a;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+}
+
+/* ✅ الحاوية الداخلية للوسائط */
+.media-wrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    max-height: 600px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #0a0a0a;
+    overflow: hidden;
+}
+
+/* ✅ الصور والفيديو - تمتد لملء المساحة مع الحفاظ على النسبة */
+.media-wrapper img,
+.media-wrapper video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: #0a0a0a !important;
+}
+
+/* ✅ تحسين أزرار التنقل */
+.gallery-nav {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.gallery-nav-btn {
+    pointer-events: auto;
+    width: 48px;
+    height: 48px;
+    background: rgba(0,0,0,0.7);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.gallery-nav-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(201,168,76,0.5);
+}
+
+.gallery-nav-btn:active {
+    transform: scale(0.9);
+}
+
+/* ✅ عداد الصور */
+.image-counter {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.1);
+    letter-spacing: 0.5px;
+}
+
+/* ✅ تحسين مودال العقار */
+.modal-container.modal-large {
+    max-width: 900px;
+    max-height: 95vh;
+}
+
+.property-detail-body {
+    padding: 0 !important;
+}
+
+.property-gallery {
+    position: relative;
+    width: 100%;
+}
+
+/* ✅ تحسين أزرار التحكم في الفيديو */
+.media-wrapper video::-webkit-media-controls {
+    background: rgba(0,0,0,0.5);
+    border-radius: 8px;
+}
+
+.media-wrapper video::-webkit-media-controls-panel {
+    padding: 10px;
+}
+
+/* ✅ للشاشات الصغيرة */
+@media (max-width: 768px) {
+    #galleryMain {
+        min-height: 250px;
+        max-height: 400px;
+    }
+    
+    .media-wrapper {
+        min-height: 250px;
+        max-height: 400px;
+    }
+    
+    .gallery-nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    #galleryMain {
+        min-height: 200px;
+        max-height: 350px;
+    }
+    
+    .media-wrapper {
+        min-height: 200px;
+        max-height: 350px;
+    }
+}
+
+/* ===== تحسين عرض الصور في البطاقات ===== */
+
+.card-images {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ✅ الصور والفيديو تظهر بشكل كامل مع الحفاظ على النسبة */
+.card-main-img,
+.card-main-video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    background: #0a0a0a !important;
+    display: block !important;
+}
+
+/* ✅ تحسين عرض الفيديو في البطاقة */
+.card-main-video {
+    background: #000 !important;
+}
+
+/* ✅ عند hover على البطاقة، لا تكبير الصورة */
+.property-card:hover .card-images img,
+.property-card:hover .card-images video {
+    transform: none !important;
+}
+
+/* ✅ تحسين النقاط */
+.card-image-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 5;
+}
+
+.card-image-dots .img-dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.card-image-dots .img-dot.active {
+    background: var(--primary);
+    width: 20px;
+    border-radius: 4px;
+}
+
+/* ✅ أزرار التنقل */
+.card-img-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 5;
+    backdrop-filter: blur(2px);
+}
+
+.card-img-nav:hover {
+    background: var(--primary);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.card-img-nav.prev {
+    left: 8px;
+}
+
+.card-img-nav.next {
+    right: 8px;
+}
+
+/* ===== أزرار التنقل في المودال ===== */
+
+.gallery-nav {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.gallery-nav-btn {
+    pointer-events: auto;
+    width: 48px;
+    height: 48px;
+    background: rgba(0,0,0,0.7);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.gallery-nav-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(201,168,76,0.4);
+}
+
+.gallery-nav-btn:active {
+    transform: scale(0.9);
+}
+
+/* ✅ عداد الصور */
+.image-counter {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.1);
+    letter-spacing: 0.5px;
+}
+
+/* ===== أزرار التنقل في المودال - إظهارها بشكل واضح ===== */
+
+/* الحاوية الرئيسية للمعرض */
+#galleryMain {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    max-height: 600px;
+    background: #0a0a0a;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+}
+
+/* ✅ حاوية أزرار التنقل - تظهر دائماً */
+.gallery-nav {
+    position: absolute !important;
+    top: 50% !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 0 15px !important;
+    z-index: 999 !important;
+    pointer-events: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ✅ أزرار التنقل - واضحة وكبيرة */
+.gallery-nav-btn {
+    pointer-events: auto !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    color: white !important;
+    font-size: 22px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(4px) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+    z-index: 1000 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+
+.gallery-nav-btn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.15) !important;
+    box-shadow: 0 0 40px rgba(201, 168, 76, 0.6) !important;
+}
+
+.gallery-nav-btn:active {
+    transform: scale(0.9) !important;
+}
+
+.gallery-nav-btn.prev {
+    margin-left: 5px;
+}
+
+.gallery-nav-btn.next {
+    margin-right: 5px;
+}
+
+/* ✅ عداد الصور */
+.image-counter {
+    position: absolute !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+    padding: 6px 18px !important;
+    border-radius: 20px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    z-index: 100 !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ============================================
+   إصلاح أزرار التنقل في المودال - نهائي
+   ============================================ */
+
+/* ✅ التأكد من ظهور أزرار التنقل */
+#propertyModal .gallery-nav {
+    position: absolute !important;
+    top: 50% !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 0 20px !important;
+    z-index: 9999 !important;
+    pointer-events: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+}
+
+/* ✅ أزرار التنقل نفسها */
+#propertyModal .gallery-nav-btn {
+    pointer-events: auto !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    color: #ffffff !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(4px) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    user-select: none !important;
+}
+
+/* ✅ تأثير hover */
+#propertyModal .gallery-nav-btn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.15) !important;
+    box-shadow: 0 0 40px rgba(201, 168, 76, 0.6) !important;
+    color: #1a1410 !important;
+}
+
+/* ✅ تأثير الضغط */
+#propertyModal .gallery-nav-btn:active {
+    transform: scale(0.9) !important;
+}
+
+/* ✅ إزالة أي أنماط قد تمنع ظهور الأزرار */
+#propertyModal .gallery-nav-btn.prev,
+#propertyModal .gallery-nav-btn.next {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ✅ عداد الصور - تحسين المظهر */
+#propertyModal .image-counter {
+    position: absolute !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: #ffffff !important;
+    padding: 6px 18px !important;
+    border-radius: 20px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    z-index: 100 !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ============================================
+   عرض الصور بحجمها الكامل في المودال
+   ============================================ */
+
+/* ✅ حاوية المعرض الرئيسية */
+#galleryMain {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    max-height: 600px;
+    background: #0a0a0a;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+}
+
+/* ✅ حاوية الوسائط */
+.media-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 400px !important;
+    max-height: 600px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #0a0a0a !important;
+    overflow: hidden !important;
+}
+
+/* ✅ الصور - تظهر بحجمها الكامل مع الحفاظ على النسبة */
+.media-wrapper img {
+    width: auto !important;
+    height: auto !important;
+    max-width: 95% !important;
+    max-height: 95% !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: #0a0a0a !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3) !important;
+}
+
+/* ✅ الفيديو - يظهر بحجم مناسب */
+.media-wrapper video {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: #000 !important;
+}
+
+/* ✅ أزرار التنقل */
+.gallery-nav {
+    position: absolute !important;
+    top: 50% !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 0 15px !important;
+    z-index: 9999 !important;
+    pointer-events: none !important;
+    width: 100% !important;
+}
+
+.gallery-nav-btn {
+    pointer-events: auto !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    border: 2px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 50% !important;
+    color: #ffffff !important;
+    font-size: 20px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(4px) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    user-select: none !important;
+}
+
+.gallery-nav-btn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.12) !important;
+    box-shadow: 0 0 35px rgba(201, 168, 76, 0.5) !important;
+    color: #1a1410 !important;
+}
+
+.gallery-nav-btn:active {
+    transform: scale(0.9) !important;
+}
+
+.gallery-nav-btn i {
+    font-size: 20px;
+}
+
+/* ✅ عداد الصور */
+.image-counter {
+    position: absolute !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: #ffffff !important;
+    padding: 6px 16px !important;
+    border-radius: 20px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    z-index: 100 !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ✅ للشاشات الصغيرة */
+@media (max-width: 768px) {
+    #galleryMain {
+        min-height: 250px !important;
+        max-height: 400px !important;
+    }
+    
+    .media-wrapper {
+        min-height: 250px !important;
+        max-height: 400px !important;
+    }
+    
+    .gallery-nav-btn {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        font-size: 16px !important;
+    }
+    
+    .gallery-nav-btn i {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    #galleryMain {
+        min-height: 200px !important;
+        max-height: 350px !important;
+    }
+    
+    .media-wrapper {
+        min-height: 200px !important;
+        max-height: 350px !important;
+    }
+    
+    .gallery-nav-btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        font-size: 14px !important;
+    }
+    
+    .gallery-nav-btn i {
+        font-size: 14px;
+    }
+}
+
+/* ============================================
+   عرض الصور بحجمها الكامل - إصلاح نهائي
+   ============================================ */
+
+/* ✅ حاوية المعرض */
+#galleryMain {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    max-height: 600px;
+    background: #0a0a0a;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+}
+
+/* ✅ حاوية الوسائط */
+.media-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 400px !important;
+    max-height: 600px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #0a0a0a !important;
+    overflow: hidden !important;
+}
+
+/* ✅ الصور - تظهر بحجمها الكامل */
+.media-wrapper img {
+    width: auto !important;
+    height: auto !important;
+    max-width: 95% !important;
+    max-height: 95% !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: #0a0a0a !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3) !important;
+    transition: none !important;
+}
+
+/* ✅ الفيديو */
+.media-wrapper video {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: #000 !important;
+}
+
+/* ✅ أزرار التنقل */
+.gallery-nav {
+    position: absolute !important;
+    top: 50% !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 0 15px !important;
+    z-index: 9999 !important;
+    pointer-events: none !important;
+    width: 100% !important;
+}
+
+.gallery-nav-btn {
+    pointer-events: auto !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    border: 2px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 50% !important;
+    color: #ffffff !important;
+    font-size: 20px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(4px) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    user-select: none !important;
+}
+
+.gallery-nav-btn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.12) !important;
+    box-shadow: 0 0 35px rgba(201, 168, 76, 0.5) !important;
+    color: #1a1410 !important;
+}
+
+.gallery-nav-btn:active {
+    transform: scale(0.9) !important;
+}
+
+.gallery-nav-btn i {
+    font-size: 20px;
+}
+
+/* ✅ عداد الصور */
+.image-counter {
+    position: absolute !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: #ffffff !important;
+    padding: 6px 16px !important;
+    border-radius: 20px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    z-index: 100 !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ✅ إصلاح عرض الصور في المودال */
+#galleryMain .media-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #0a0a0a !important;
+}
+
+#galleryMain .media-wrapper img,
+#galleryMain .media-wrapper video {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: transparent !important;
+}
+
+/* ============================================
+   ZOOM BUTTON & MODAL
+   ============================================ */
+
+/* زر التكبير */
+.zoom-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.zoom-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.4);
+}
+
+/* زر الخروج من التكبير */
+.zoom-close-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10002;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 24px;
+    backdrop-filter: blur(4px);
+    display: none;
+}
+
+.zoom-close-btn:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    transform: scale(1.1);
+}
+
+/* وضع التكبير */
+.zoom-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10001;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+    padding: 20px;
+}
+
+.zoom-overlay.active {
+    display: flex;
+}
+
+.zoom-overlay img {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    animation: zoomIn 0.3s ease;
+}
+
+.zoom-overlay video {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    animation: zoomIn 0.3s ease;
+    background: #000;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* تحسين زر التكبير للجوال */
+@media (max-width: 768px) {
+    .zoom-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        bottom: 15px;
+        left: 15px;
+    }
+    
+    .zoom-close-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+        top: 15px;
+        right: 15px;
+    }
+}
+
+/* ============================================
+   ZOOM BUTTON & MODAL
+   ============================================ */
+
+/* زر التكبير */
+.zoom-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.zoom-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.4);
+}
+
+/* زر الخروج من التكبير */
+.zoom-close-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10002;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 24px;
+    backdrop-filter: blur(4px);
+}
+
+.zoom-close-btn:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    transform: scale(1.1);
+}
+
+/* نافذة التكبير */
+.zoom-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10001;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+    padding: 20px;
+}
+
+.zoom-overlay.active {
+    display: flex;
+}
+
+.zoom-overlay img,
+.zoom-overlay video {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    animation: zoomIn 0.3s ease;
+}
+
+.zoom-overlay video {
+    background: #000;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* تحسين للجوال */
+@media (max-width: 768px) {
+    .zoom-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        bottom: 15px;
+        left: 15px;
+    }
+    
+    .zoom-close-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+        top: 15px;
+        right: 15px;
+    }
+}
+
+/* ✅ التأكد من ظهور زر التكبير */
+#zoomBtn {
+    display: flex !important;
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    z-index: 999 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 50% !important;
+    width: 45px !important;
+    height: 45px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    color: white !important;
+    font-size: 20px !important;
+    backdrop-filter: blur(4px) !important;
+    transition: all 0.3s ease !important;
+}
+
+#zoomBtn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.4) !important;
+}
+
+/* ✅ التأكد من ظهور زر الخروج */
+#zoomCloseBtn {
+    display: none !important;
+}
+
+#zoomOverlay.active #zoomCloseBtn {
+    display: flex !important;
+}
+
+/* ===== إصلاح نهائي لظهور زر التكبير ===== */
+#zoomBtn {
+    display: flex !important;
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    z-index: 9999 !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    border: 2px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 50% !important;
+    width: 48px !important;
+    height: 48px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    color: #ffffff !important;
+    font-size: 20px !important;
+    backdrop-filter: blur(4px) !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+#zoomBtn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.12) !important;
+    box-shadow: 0 0 35px rgba(201, 168, 76, 0.5) !important;
+    color: #1a1410 !important;
+}
+
+#zoomBtn i {
+    font-size: 20px !important;
+}
+
+/* ✅ زر الخروج - يظهر فقط عند تفعيل التكبير */
+#zoomCloseBtn {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 10002 !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    width: 50px !important;
+    height: 50px !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    color: #ffffff !important;
+    font-size: 24px !important;
+    backdrop-filter: blur(4px) !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+#zoomCloseBtn:hover {
+    background: var(--danger) !important;
+    border-color: var(--danger) !important;
+    transform: scale(1.1) !important;
+}
+
+#zoomOverlay.active #zoomCloseBtn {
+    display: flex !important;
+}
+
+/* ✅ نافذة التكبير */
+#zoomOverlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+    z-index: 10001 !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: zoom-out !important;
+    padding: 20px !important;
+}
+
+#zoomOverlay.active {
+    display: flex !important;
+}
+
+#zoomOverlay img,
+#zoomOverlay video {
+    max-width: 95% !important;
+    max-height: 95% !important;
+    object-fit: contain !important;
+    border-radius: 8px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
+    animation: zoomIn 0.3s ease !important;
+}
+
+#zoomOverlay video {
+    background: #000 !important;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* ✅ استجابة للجوال */
+@media (max-width: 768px) {
+    #zoomBtn {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 16px !important;
+        bottom: 15px !important;
+        left: 15px !important;
+    }
+    
+    #zoomBtn i {
+        font-size: 16px !important;
+    }
+    
+    #zoomCloseBtn {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 20px !important;
+        top: 15px !important;
+        right: 15px !important;
+    }
+}
+
+/* نافذة التكبير */
+#zoomOverlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+    z-index: 10001 !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: zoom-out !important;
+    padding: 20px !important;
+}
+
+#zoomOverlay.active {
+    display: flex !important;
+}
+
+#zoomOverlay img,
+#zoomOverlay video {
+    max-width: 95% !important;
+    max-height: 95% !important;
+    object-fit: contain !important;
+    border-radius: 8px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
+}
+
+#zoomOverlay video {
+    background: #000 !important;
+}
+
+/* زر الخروج */
+#zoomCloseBtn {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 10002 !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    width: 50px !important;
+    height: 50px !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    color: #ffffff !important;
+    font-size: 24px !important;
+    backdrop-filter: blur(4px) !important;
+    transition: all 0.3s ease !important;
+}
+
+#zoomCloseBtn:hover {
+    background: var(--danger) !important;
+    border-color: var(--danger) !important;
+    transform: scale(1.1) !important;
+}
+
+#zoomOverlay.active #zoomCloseBtn {
+    display: flex !important;
+}
+
+/* زر التكبير */
+.zoom-btn {
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    z-index: 9999 !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    border: 2px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 50% !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    color: #ffffff !important;
+    font-size: 20px !important;
+    backdrop-filter: blur(4px) !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+.zoom-btn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.12) !important;
+    box-shadow: 0 0 35px rgba(201, 168, 76, 0.5) !important;
+    color: #1a1410 !important;
 }
