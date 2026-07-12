@@ -1509,7 +1509,7 @@ function dotClickHandler(e) {
 }
 
 // ============================================================
-// 7. دوال الإحصائيات - نظام عداد زوار دقيق
+// 7. دوال الإحصائيات - نظام عداد زوار (no-cors فقط)
 // ============================================================
 
 async function initStats() {
@@ -1519,39 +1519,240 @@ async function initStats() {
     
     updateStatsUI(visitors, contacts);
     
-    // جلب العداد من الخادم
-    await fetchVisitorCount();
-    
-    // جلب عدد الاستفسارات
-    fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data && data.count) {
-                contacts = data.count;
-                localStorage.setItem('kh_contacts_total', contacts);
-                updateStatsUI(visitors, contacts);
-            }
-        })
-        .catch(err => console.error('خطأ في جلب الاستفسارات:', err));
+    // محاولة جلب البيانات من الخادم (بدون انتظار)
+    fetchVisitorCount().catch(() => {});
+    fetchContactsCount().catch(() => {});
 }
 
-// دالة جلب عدد الزوار من الخادم
+// دالة جلب عدد الزوار من الخادم - مع no-cors
 async function fetchVisitorCount() {
     try {
-        // ✅ استخدام no-cors للحصول على البيانات
-        const response = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
+        await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
             mode: 'no-cors'
         });
-        
-        // مع no-cors، لا يمكن قراءة الرد، لذا نستخدم localStorage مؤقتاً
+        // لا يمكن قراءة الرد مع no-cors، نستخدم localStorage
         const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        console.log(`📊 عدد الزوار الحالي (من localStorage): ${visitors}`);
         return visitors;
-        
     } catch (error) {
         console.error('❌ خطأ في جلب عدد الزوار:', error);
         return parseInt(localStorage.getItem('kh_visitors_total') || '0');
     }
+}
+
+// دالة جلب عدد الاستفسارات - مع no-cors
+async function fetchContactsCount() {
+    try {
+        await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`, {
+            mode: 'no-cors'
+        });
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        return contacts;
+    } catch (error) {
+        console.error('❌ خطأ في جلب الاستفسارات:', error);
+        return parseInt(localStorage.getItem('kh_contacts_total') || '0');
+    }
+}
+
+// دالة زيادة عدد الزوار - مع no-cors فقط
+async function incrementVisitorCount() {
+    const now = Date.now();
+    const lastVisitKey = 'kh_last_visit_time';
+    const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
+    const fiveMinutes = 5 * 60 * 1000;
+    
+    if (now - lastVisitTime < fiveMinutes) {
+        console.log(`⏳ لم تمر 5 دقائق بعد`);
+        return false;
+    }
+    
+    localStorage.setItem(lastVisitKey, now.toString());
+    
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                type: 'incrementVisitor',
+                timestamp: now
+            })
+        });
+        
+        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
+        
+        // تحديث العداد محلياً
+        const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const newCount = currentCount + 1;
+        localStorage.setItem('kh_visitors_total', newCount);
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(newCount, contacts);
+        console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
+        return true;
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        return false;
+    }
+}
+
+// دالة زيادة عدد الاستفسارات - مع no-cors فقط
+async function incrementContactsCount() {
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'incrementContacts' })
+        });
+        console.log('✅ تم إرسال طلب زيادة الاستفسارات (no-cors)');
+        
+        // تحديث محلي
+        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        const newContacts = currentContacts + 1;
+        localStorage.setItem('kh_contacts_total', newContacts);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        updateStatsUI(visitors, newContacts);
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
+    }
+}
+
+function updateStatsUI(visitors, contacts) {
+    const available = allProperties.filter(p => p.available).length;
+    const sold = allProperties.filter(p => !p.available).length;
+    
+    // تحديث العناصر
+    const elements = {
+        heroAvailable: available,
+        heroSold: sold,
+        heroVisitors: visitors,
+        statsAvailable: available,
+        statsSold: sold,
+        statsVisitors: visitors,
+        statsContacts: contacts,
+        totalVisitors: visitors
+    };
+    
+    Object.entries(elements).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    });
+}
+
+// دالة تحديث الإحصائيات التلقائية
+async function autoRefreshStats() {
+    console.log('🔄 جاري تحديث الإحصائيات...');
+    try {
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(visitors, contacts);
+        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر, ${contacts} استفسار`);
+    } catch (error) {
+        console.error('❌ فشل تحديث الإحصائيات:', error);
+    }
+    setTimeout(autoRefreshStats, 300000);
+}
+
+// بدء التحديث التلقائي
+autoRefreshStats();
+// دالة جلب عدد الزوار من الخادم - مع no-cors
+async function fetchVisitorCount() {
+    try {
+        // ✅ استخدام no-cors (لا يمكن قراءة الرد، لكن الطلب يصل)
+        await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
+            mode: 'no-cors'
+        });
+        
+        // نظراً لأننا لا نستطيع قراءة الرد، نستخدم localStorage
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        console.log(`📊 عدد الزوار من localStorage: ${visitors}`);
+        return visitors;
+        
+    } catch (error) {
+        console.error('❌ خطأ في جلب عدد الزوار:', error);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        return visitors;
+    }
+}
+
+// دالة زيادة عدد الزوار مع فاصل زمني 5 دقائق - مع no-cors
+async function incrementVisitorCount() {
+    const now = Date.now();
+    const lastVisitKey = 'kh_last_visit_time';
+    const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
+    const fiveMinutes = 5 * 60 * 1000;
+    
+    if (now - lastVisitTime < fiveMinutes) {
+        console.log(`⏳ لم تمر 5 دقائق بعد`);
+        return false;
+    }
+    
+    localStorage.setItem(lastVisitKey, now.toString());
+    
+    try {
+        // ✅ استخدام no-cors (الطلب يصل لكن لا يمكن قراءة الرد)
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                type: 'incrementVisitor',
+                timestamp: now
+            })
+        });
+        
+        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
+        
+        // ✅ تحديث العداد محلياً بزيادة 1
+        const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const newCount = currentCount + 1;
+        localStorage.setItem('kh_visitors_total', newCount);
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(newCount, contacts);
+        console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
+        return true;
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        return false;
+    }
+}
+
+// دالة زيادة عدد الاستفسارات - مع no-cors
+async function incrementContactsCount() {
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'incrementContacts' })
+        });
+        console.log('✅ تم إرسال طلب زيادة الاستفسارات (no-cors)');
+        
+        // تحديث محلي
+        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        const newContacts = currentContacts + 1;
+        localStorage.setItem('kh_contacts_total', newContacts);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        updateStatsUI(visitors, newContacts);
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
+    }
+}
+
+// دالة تحديث الإحصائيات
+async function autoRefreshStats() {
+    console.log('🔄 جاري تحديث الإحصائيات...');
+    try {
+        // استخدام localStorage فقط (بما أن no-cors لا يسمح بقراءة الرد)
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(visitors, contacts);
+        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر, ${contacts} استفسار`);
+    } catch (error) {
+        console.error('❌ فشل تحديث الإحصائيات:', error);
+    }
+    setTimeout(autoRefreshStats, 300000);
 }
 
 // دالة زيادة عدد الزوار مع فاصل زمني 5 دقائق
@@ -1571,10 +1772,9 @@ async function incrementVisitorCount() {
     localStorage.setItem(lastVisitKey, now.toString());
     
     try {
-        // ✅ إرسال طلب إلى الخادم لزيادة العداد باستخدام no-cors
-        await fetch(CONFIG.API_URL, {
+        // ✅ استخدام cors بدلاً من no-cors للحصول على الرد
+        const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            mode: 'no-cors',  // ✅ هذا مهم جداً للعمل من الملفات المحلية
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 type: 'incrementVisitor',
@@ -1582,19 +1782,40 @@ async function incrementVisitorCount() {
             })
         });
         
-        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
-        // ✅ تحديث العداد محلياً بزيادة 1 (نظراً لأننا لا نستطيع قراءة الرد)
+        const data = await response.json();
+        console.log('✅ رد الخادم بعد زيادة الزوار:', data);
+        
+        if (data && data.count !== undefined) {
+            const newCount = parseInt(data.count) || 0;
+            localStorage.setItem('kh_visitors_total', newCount);
+            const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+            updateStatsUI(newCount, contacts);
+            console.log(`📊 العدد الجديد من الخادم: ${newCount}`);
+            return true;
+        } else {
+            // إذا لم يستجب الخادم بشكل صحيح، قم بزيادة محلية
+            const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            const newCount = currentCount + 1;
+            localStorage.setItem('kh_visitors_total', newCount);
+            const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+            updateStatsUI(newCount, contacts);
+            console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
+            return true;
+        }
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        
+        // في حالة الخطأ، قم بزيادة محلية
         const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
         const newCount = currentCount + 1;
         localStorage.setItem('kh_visitors_total', newCount);
-        updateStatsUI(newCount, parseInt(localStorage.getItem('kh_contacts_total') || '0'));
-        
-        console.log(`📊 العدد الجديد (تقديري): ${newCount}`);
-        return true;
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(newCount, contacts);
+        console.log(`📊 العدد الجديد (تقديري محلي بعد الخطأ): ${newCount}`);
         
         // محاولة مرة أخرى بعد 30 ثانية
         setTimeout(() => {
@@ -1609,15 +1830,34 @@ async function incrementVisitorCount() {
 // دالة زيادة عدد الاستفسارات (للمستخدمين الذين يتواصلون)
 async function incrementContactsCount() {
     try {
-        await fetch(CONFIG.API_URL, {
+        const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'incrementContacts' })
         });
-        console.log('✅ تم تحديث عداد الاستفسارات');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ رد الخادم بعد زيادة الاستفسارات:', data);
+        
+        if (data && data.count !== undefined) {
+            const contacts = parseInt(data.count) || 0;
+            localStorage.setItem('kh_contacts_total', contacts);
+            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            updateStatsUI(visitors, contacts);
+            console.log(`📊 عدد الاستفسارات الجديد: ${contacts}`);
+        }
     } catch (error) {
         console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
+        // زيادة محلية كحل بديل
+        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        const newContacts = currentContacts + 1;
+        localStorage.setItem('kh_contacts_total', newContacts);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        updateStatsUI(visitors, newContacts);
     }
 }
 
@@ -1654,16 +1894,22 @@ async function autoRefreshStats() {
         await fetchVisitorCount();
         
         // تحديث عدد الاستفسارات
-        const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
-        const contactsData = await contactsRes.json();
-        if (contactsData && contactsData.count !== undefined) {
-            const contacts = contactsData.count;
-            localStorage.setItem('kh_contacts_total', contacts);
-            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-            updateStatsUI(visitors, contacts);
+        try {
+            const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
+            const contactsData = await contactsRes.json();
+            if (contactsData && contactsData.count !== undefined) {
+                const contacts = parseInt(contactsData.count) || 0;
+                localStorage.setItem('kh_contacts_total', contacts);
+                const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+                updateStatsUI(visitors, contacts);
+                console.log(`📊 عدد الاستفسارات من الخادم: ${contacts}`);
+            }
+        } catch (err) {
+            console.error('❌ فشل جلب الاستفسارات:', err);
         }
         
-        console.log(`✅ تم تحديث الإحصائيات`);    } catch (error) {
+        console.log(`✅ تم تحديث الإحصائيات`);
+    } catch (error) {
         console.error('❌ فشل تحديث الإحصائيات، إعادة المحاولة بعد 30 ثانية');
         setTimeout(autoRefreshStats, 30000);
         return;
@@ -2073,16 +2319,51 @@ async function openPropertyModal(id) {
     currentPropertyImages = p.images || [];
     currentImageIndex = 0;
 
-    // ✅ تنظيف معرض الصور مع الحفاظ على أزرار التنقل
+    // ✅ تنظيف معرض الصور مع الحفاظ على zoomOverlay و zoomBtn وأزرار التنقل والعداد
     const galleryMain = document.getElementById('galleryMain');
     if (galleryMain) {
-        // حذف جميع العناصر باستثناء .gallery-nav و .image-counter
+        // حذف جميع العناصر باستثناء العناصر المهمة
         const children = galleryMain.children;
         for (let i = children.length - 1; i >= 0; i--) {
             const child = children[i];
-            if (!child.classList.contains('gallery-nav') && !child.classList.contains('image-counter')) {
-                child.remove();
+            // الاحتفاظ بالعناصر المهمة
+            if (child.id === 'zoomOverlay' || 
+                child.id === 'zoomBtn' ||
+                child.classList.contains('gallery-nav') || 
+                child.classList.contains('image-counter')) {
+                continue;
             }
+            child.remove();
+        }
+        
+        // ✅ التأكد من وجود zoomOverlay في الصفحة (وليس داخل galleryMain)
+        let zoomOverlay = document.getElementById('zoomOverlay');
+        if (!zoomOverlay) {
+            // إذا لم يكن موجوداً، أنشئه في نهاية body
+            zoomOverlay = document.createElement('div');
+            zoomOverlay.className = 'zoom-overlay';
+            zoomOverlay.id = 'zoomOverlay';
+            zoomOverlay.onclick = closeZoom;
+            zoomOverlay.innerHTML = `
+                <img id="zoomImage" src="" alt="صورة مكبرة">
+                <video id="zoomVideo" src="" controls style="display:none;"></video>
+                <button class="zoom-close-btn" id="zoomCloseBtn" onclick="closeZoom()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            document.body.appendChild(zoomOverlay);
+        }
+        
+        // ✅ التأكد من وجود زر التكبير
+        let zoomBtn = document.getElementById('zoomBtn');
+        if (!zoomBtn) {
+            zoomBtn = document.createElement('button');
+            zoomBtn.className = 'zoom-btn';
+            zoomBtn.id = 'zoomBtn';
+            zoomBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            zoomBtn.title = 'تكبير الصورة';
+            zoomBtn.onclick = openZoom;
+            galleryMain.insertBefore(zoomBtn, galleryMain.firstChild);
         }
         
         // ✅ إذا لم توجد أزرار تنقل، أضفها
@@ -2135,23 +2416,24 @@ async function openPropertyModal(id) {
             'none' : 
             '1px dashed #e74c3c';
         
+        // في دالة openPropertyModal، عند عرض المواصفات
         specs.innerHTML = `
-            <div class="spec-item-detail"><i class="fas fa-ruler-combined"></i><div><span class="spec-label-detail">${t?.property_specs_area || 'المساحة'}</span><span class="spec-value-detail">${p.area} م²</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-door-open"></i><div><span class="spec-label-detail">${t?.property_specs_rooms || 'الغرف'}</span><span class="spec-value-detail">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-bath"></i><div><span class="spec-label-detail">${t?.property_specs_bathrooms || 'الحمامات'}</span><span class="spec-value-detail">${p.bathrooms || '—'}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-layer-group"></i><div><span class="spec-label-detail">${t?.property_specs_floor || 'الطابق'}</span><span class="spec-value-detail">${p.floor === 0 ? (currentLanguage === 'ar' ? 'أرضي' : 'Ground') : p.floor}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-arrow-up"></i><div><span class="spec-label-detail">${t?.property_specs_elevator || 'مصعد'}</span><span class="spec-value-detail">${elevator}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-compass"></i><div><span class="spec-label-detail">${t?.property_specs_direction || 'الاتجاه'}</span><span class="spec-value-detail">${direction}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-paint-brush"></i><div><span class="spec-label-detail">${t?.property_specs_finishing || 'التشطيب'}</span><span class="spec-value-detail">${finishing}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-car"></i><div><span class="spec-label-detail">${t?.property_specs_parking || 'موقف السيارة'}</span><span class="spec-value-detail">${parking}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-file-contract"></i><div><span class="spec-label-detail">${t?.property_specs_ownership || 'سند الملكية'}</span><span class="spec-value-detail">${ownership}</span></div></div>
-            <div class="spec-item-detail" style="background:${priceBg};border:${priceBorder}">
-                <i class="fas fa-tag" style="color:${p.isPriceNumeric ? '#C9A84C' : '#e74c3c'}"></i>
-                <div>
-                    <span class="spec-label-detail">${t?.property_specs_price || 'السعر'}</span>
-                    <span class="spec-value-detail" style="${priceStyle}">${priceDisplay}</span>
-                </div>
+        <div class="spec-item-detail"><i class="fas fa-ruler-combined"></i><div><span class="spec-label-detail">${t?.property_specs_area || 'المساحة'}</span><span class="spec-value-detail">${p.area} م²</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-door-open"></i><div><span class="spec-label-detail">${t?.property_specs_rooms || 'الغرف'}</span><span class="spec-value-detail">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-bath"></i><div><span class="spec-label-detail">${t?.property_specs_bathrooms || 'الحمامات'}</span><span class="spec-value-detail">${p.bathrooms || '—'}</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-layer-group"></i><div><span class="spec-label-detail">${t?.property_specs_floor || 'الطابق'}</span><span class="spec-value-detail">${p.floor === 0 ? (currentLanguage === 'ar' ? 'أرضي' : 'Ground') : p.floor}</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-arrow-up"></i><div><span class="spec-label-detail">${t?.property_specs_elevator || 'مصعد'}</span><span class="spec-value-detail">${getLocalizedText(p, 'elevator')}</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-compass"></i><div><span class="spec-label-detail">${t?.property_specs_direction || 'الاتجاه'}</span><span class="spec-value-detail">${getLocalizedText(p, 'direction')}</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-paint-brush"></i><div><span class="spec-label-detail">${t?.property_specs_finishing || 'التشطيب'}</span><span class="spec-value-detail">${getLocalizedText(p, 'finishing')}</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-car"></i><div><span class="spec-label-detail">${t?.property_specs_parking || 'موقف السيارة'}</span><span class="spec-value-detail">${getLocalizedText(p, 'parking')}</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-file-contract"></i><div><span class="spec-label-detail">${t?.property_specs_ownership || 'سند الملكية'}</span><span class="spec-value-detail">${getLocalizedText(p, 'ownership')}</span></div></div>
+        <div class="spec-item-detail" style="background:${priceBg};border:${priceBorder}">
+            <i class="fas fa-tag" style="color:${p.isPriceNumeric ? '#C9A84C' : '#e74c3c'}"></i>
+            <div>
+                <span class="spec-label-detail">${t?.property_specs_price || 'السعر'}</span>
+                <span class="spec-value-detail" style="${priceStyle}">${priceDisplay}</span>
             </div>
+        </div>
         `;
     }
     
@@ -2220,7 +2502,6 @@ async function openPropertyModal(id) {
     history.pushState({}, '', `${window.location.pathname}?id=${id}`);
 }
 
-// استبدل دالة updateModalImage الموجودة بهذه النسخة
 function updateModalImage() {
     const galleryMain = document.getElementById('galleryMain');
     const counter = document.getElementById('imageCounter');
@@ -2228,20 +2509,17 @@ function updateModalImage() {
     
     if (!galleryMain) return;
     
-    // 1. حذف جميع عناصر الوسائط السابقة مع الاحتفاظ بالأزرار الثابتة والعداد
+    // 1. حذف جميع عناصر الوسائط السابقة
     const children = galleryMain.children;
     for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i];
-        // الاحتفاظ بالعناصر الثابتة التي لها id محدد
-        if (child.id === 'zoomBtn' || child.id === 'zoomOverlay' || 
-            child.id === 'imageCounter' || child.classList.contains('gallery-nav')) {
+        if (child.id === 'zoomBtn' || 
+            child.id === 'zoomOverlay' || 
+            child.id === 'imageCounter' || 
+            child.classList.contains('gallery-nav')) {
             continue;
         }
-        // حذف أي عناصر وسائط سابقة (صور أو فيديوهات)
-        if (child.tagName === 'IMG' || child.tagName === 'VIDEO' || 
-            child.classList.contains('media-wrapper') || child.classList.contains('video-wrapper')) {
-            child.remove();
-        }
+        child.remove();
     }
     
     // 2. التأكد من وجود العداد
@@ -2253,7 +2531,7 @@ function updateModalImage() {
         galleryMain.appendChild(imageCounter);
     }
     
-    // 3. التأكد من وجود زر التكبير (إذا تم حذفه بالخطأ)
+    // 3. التأكد من وجود زر التكبير
     let zoomButton = document.getElementById('zoomBtn');
     if (!zoomButton) {
         zoomButton = document.createElement('button');
@@ -2279,7 +2557,6 @@ function updateModalImage() {
         wrapper.style.cssText = 'width:100%;height:100%;min-height:400px;max-height:600px;display:flex;align-items:center;justify-content:center;background:#0a0a0a;overflow:hidden;';
         
         if (isVideo) {
-            // معالجة الفيديو
             const video = document.createElement('video');
             video.src = mediaUrl;
             video.controls = true;
@@ -2289,7 +2566,6 @@ function updateModalImage() {
             video.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#000;';
             wrapper.appendChild(video);
         } else {
-            // معالجة الصورة
             const img = document.createElement('img');
             img.src = mediaUrl;
             img.alt = 'صورة العقار';
@@ -2312,7 +2588,7 @@ function updateModalImage() {
         }
         
     } else {
-        // لا توجد صور: عرض الصورة الافتراضية وإخفاء زر التكبير
+        // لا توجد صور
         if (zoomButton) zoomButton.style.display = 'none';
         
         const wrapper = document.createElement('div');
@@ -2334,86 +2610,49 @@ function updateModalImage() {
     }
 }
 
-// ✅ فتح نافذة التكبير
+// ✅ فتح الصورة في نافذة جديدة - طريقة مباشرة
 function openZoom() {
-    console.log('🔄 تم الضغط على زر التكبير');
+    let imageUrl = null;
     
-    const zoomOverlay = document.getElementById('zoomOverlay');
-    const zoomImage = document.getElementById('zoomImage');
-    const zoomVideo = document.getElementById('zoomVideo');
-    const zoomCloseBtn = document.getElementById('zoomCloseBtn');
-    
-    if (!zoomOverlay) {
-        console.error('❌ zoomOverlay غير موجود');
-        return;
-    }
-    
-    // ✅ البحث عن الصورة أو الفيديو المعروض حالياً
+    // 1. البحث عن الصورة في media-wrapper
     const galleryMain = document.getElementById('galleryMain');
-    if (!galleryMain) {
-        console.error('❌ galleryMain غير موجود');
-        return;
-    }
-    
-    // البحث في جميع العناصر الممكنة
-    let currentMedia = galleryMain.querySelector('.media-wrapper img');
-    if (!currentMedia) {
-        currentMedia = galleryMain.querySelector('.video-wrapper .card-main-video');
-    }
-    if (!currentMedia) {
-        currentMedia = galleryMain.querySelector('.video-wrapper .video-poster');
-    }
-    if (!currentMedia) {
-        // محاولة البحث في أي صورة أو فيديو داخل galleryMain
-        currentMedia = galleryMain.querySelector('img, video');
-    }
-    
-    if (!currentMedia) {
-        console.warn('⚠️ لا يوجد وسائط لعرضها');
-        showToast('لا توجد صورة للتكبير', 'error');
-        return;
-    }
-    
-    console.log('📺 الوسائط الموجودة:', currentMedia.tagName, currentMedia.src || currentMedia.currentSrc);
-    
-    // إخفاء كليهما أولاً
-    if (zoomImage) zoomImage.style.display = 'none';
-    if (zoomVideo) {
-        zoomVideo.style.display = 'none';
-        zoomVideo.pause();
-    }
-    
-    // تحديد نوع الوسائط
-    if (currentMedia.tagName === 'IMG') {
-        // صورة
-        if (zoomImage) {
-            zoomImage.src = currentMedia.src;
-            zoomImage.alt = currentMedia.alt || 'صورة مكبرة';
-            zoomImage.style.display = 'block';
-            console.log('✅ تم عرض الصورة في نافذة التكبير');
+    if (galleryMain) {
+        const mediaWrapper = galleryMain.querySelector('.media-wrapper');
+        if (mediaWrapper) {
+            const img = mediaWrapper.querySelector('img');
+            if (img && img.src) {
+                imageUrl = img.src;
+            }
         }
-    } else if (currentMedia.tagName === 'VIDEO') {
-        // فيديو
-        if (zoomVideo) {
-            zoomVideo.src = currentMedia.src || currentMedia.currentSrc;
-            zoomVideo.style.display = 'block';
-            console.log('✅ تم عرض الفيديو في نافذة التكبير');
+        
+        // 2. إذا لم نجد، ابحث عن أي صورة في galleryMain
+        if (!imageUrl) {
+            const img = galleryMain.querySelector('img:not(.zoom-btn):not(.gallery-nav-btn)');
+            if (img && img.src) {
+                imageUrl = img.src;
+            }
         }
+    }
+    
+    // 3. إذا لم نجد، استخدم currentPropertyImages
+    if (!imageUrl && currentPropertyImages && currentPropertyImages.length > 0) {
+        imageUrl = currentPropertyImages[currentImageIndex] || currentPropertyImages[0];
+    }
+    
+    // 4. إذا لم نجد، استخدم الصورة الافتراضية
+    if (!imageUrl) {
+        imageUrl = DEFAULT_IMAGE;
+    }
+    
+    // ✅ فتح الصورة في نافذة جديدة
+    if (imageUrl) {
+        window.open(imageUrl, '_blank');
     } else {
-        showToast('⚠️ نوع الوسائط غير مدعوم', 'error');
-        return;
+        showToast('❌ لا توجد صورة لعرضها', 'error');
     }
-    
-    // ✅ إظهار نافذة التكبير
-    zoomOverlay.classList.add('active');
-    if (zoomCloseBtn) {
-        zoomCloseBtn.style.display = 'flex';
-    }
-    document.body.style.overflow = 'hidden';
-    console.log('✅ نافذة التكبير مفتوحة');
 }
 
-// ✅ إغلاق نافذة التكبير
+// ✅ إغلاق نافذة التكبير - نسخة محسنة
 function closeZoom() {
     console.log('🔄 إغلاق نافذة التكبير');
     
@@ -2853,7 +3092,8 @@ function getLocalizedText(property, field) {
     if (lang === 'ar') {
         return property[field + '_ar'] || property[field] || '';
     } else {
-        return property[field + '_en'] || property[field] || '';
+        // إذا لم توجد الترجمة الإنجليزية، استخدم العربية
+        return property[field + '_en'] || property[field] || property[field + '_ar'] || '';
     }
 }
 

@@ -404,23 +404,15 @@
         </div>
         <div class="modal-body property-detail-body">
             <div class="property-gallery">
+                <!-- حاوية المعرض الرئيسية -->
                 <div class="gallery-main" id="galleryMain">
-                    <!-- زر التكبير - موجود بشكل ثابت -->
-                    <button class="zoom-btn" id="zoomBtn" onclick="openZoom()" title="تكبير الصورة">
+                    <button class="zoom-btn" id="zoomBtn" title="فتح الصورة بحجم كامل" onclick="openZoom()">
                         <i class="fas fa-expand"></i>
                     </button>
-                
-                    <!-- سيتم إضافة الصور/الفيديو هنا بواسطة JavaScript -->
-                    <!-- نافذة التكبير -->
-                    <div class="zoom-overlay" id="zoomOverlay" onclick="closeZoom()">
-                        <img id="zoomImage" src="" alt="صورة مكبرة">
-                        <video id="zoomVideo" src="" controls style="display:none;"></video>
-                        <button class="zoom-close-btn" id="zoomCloseBtn" onclick="closeZoom()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
                     
-                    <!-- أزرار التنقل - تظهر دائماً -->
+                    <!-- سيتم إضافة الصور/الفيديو هنا بواسطة JavaScript -->
+                    
+                    <!-- أزرار التنقل -->
                     <div class="gallery-nav">
                         <button class="gallery-nav-btn prev" onclick="prevPropImg()" aria-label="السابق">
                             <i class="fas fa-chevron-right"></i>
@@ -433,8 +425,12 @@
                     <!-- عداد الصور -->
                     <div class="image-counter" id="imageCounter">0/0</div>
                 </div>
+                
+                <!-- مصغرات الصور -->
                 <div class="gallery-thumbs" id="galleryThumbs"></div>
             </div>
+            
+            <!-- ===== هذا القسم كان فارغاً، أعدنا ملئه ===== -->
             <div class="property-info">
                 <div class="property-header">
                     <div>
@@ -475,6 +471,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- ===== PRIVACY LINK ===== -->
 <div class="footer-privacy">
