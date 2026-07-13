@@ -695,25 +695,20 @@ function refreshAllFilters() {
     translateRentPriceFilter();
     translateFloorFilter();
     
-    // ترجمة فلتر مدة الإيجار
+    // ترجمة فلتر مدة الإيجار - دعم جميع الصيغ
     const rentPeriodSelect = document.getElementById('filterRentPeriod');
     if (rentPeriodSelect) {
         const selectedValue = rentPeriodSelect.value;
-        if (rentPeriodSelect.options[0]) {
-            rentPeriodSelect.options[0].text = currentLanguage === 'ar' ? 'الكل' : 'All';
-        }
-        const periodOptions = [
-            { value: 'month', ar: 'شهرياً', en: 'Monthly' },
-            { value: 'year', ar: 'سنوياً', en: 'Yearly' },
-            { value: 'week', ar: 'أسبوعياً', en: 'Weekly' }
-        ];
-        periodOptions.forEach((opt, index) => {
-            const optionIndex = index + 1;
-            if (rentPeriodSelect.options[optionIndex]) {
-                rentPeriodSelect.options[optionIndex].text = currentLanguage === 'ar' ? opt.ar : opt.en;
-            }
-        });
-        if (selectedValue && ['month', 'year', 'week'].includes(selectedValue)) {
+        // إعادة تعيين الخيارات مع دعم جميع الصيغ
+        rentPeriodSelect.innerHTML = `
+            <option value="">${currentLanguage === 'ar' ? 'الكل' : 'All'}</option>
+            <option value="monthly">${currentLanguage === 'ar' ? 'شهرياً' : 'Monthly'}</option>
+            <option value="yearly">${currentLanguage === 'ar' ? 'سنوياً' : 'Yearly'}</option>
+            <option value="weekly">${currentLanguage === 'ar' ? 'أسبوعياً' : 'Weekly'}</option>
+            <option value="daily">${currentLanguage === 'ar' ? 'يومياً' : 'Daily'}</option>
+        `;
+        // استعادة القيمة المحددة إذا كانت موجودة
+        if (selectedValue && ['monthly', 'yearly', 'weekly', 'daily'].includes(selectedValue)) {
             rentPeriodSelect.value = selectedValue;
         } else {
             rentPeriodSelect.value = '';
@@ -828,10 +823,18 @@ function filterProperties() {
         if (floor && p.floor !== parseInt(floor)) return false;
         if (rooms && p.rooms < parseInt(rooms)) return false;
         if (code && !p.id.toUpperCase().includes(code)) return false;
-        if (rentPeriod && p.type === 'rent' && p.rent_period !== rentPeriod) return false;
-        if (rentPeriod && p.type !== 'rent') return false;
         
-        // 2. فلتر السعر (للبيع) - يطبق فقط إذا تم اختيار فلتر سعر البيع
+        // 2. فلتر مدة الإيجار - دعم جميع الصيغ
+        if (rentPeriod) {
+            // التحقق من أن العقار للإيجار
+            if (p.type !== 'rent') return false;
+            // تحويل قيم العقار والفلتر إلى حروف صغيرة للمقارنة
+            const propertyPeriod = String(p.rent_period || '').toLowerCase().trim();
+            const filterPeriod = String(rentPeriod).toLowerCase().trim();
+            if (propertyPeriod !== filterPeriod) return false;
+        }
+        
+        // 3. فلتر السعر (للبيع) - يطبق فقط إذا تم اختيار فلتر سعر البيع
         if (salePrice && salePrice !== '') {
             // إذا تم اختيار فلتر سعر البيع، يجب أن يكون العقار للبيع
             if (p.type !== 'sale') {
@@ -847,7 +850,7 @@ function filterProperties() {
             }
         }
         
-        // 3. فلتر السعر (للإيجار) - يطبق فقط إذا تم اختيار فلتر سعر الإيجار
+        // 4. فلتر السعر (للإيجار) - يطبق فقط إذا تم اختيار فلتر سعر الإيجار
         if (rentPrice && rentPrice !== '') {
             // إذا تم اختيار فلتر سعر الإيجار، يجب أن يكون العقار للإيجار
             if (p.type !== 'rent') {
@@ -868,9 +871,9 @@ function filterProperties() {
     updateResultsCount();
     
     if (filteredProperties.length === 0) {
-        showToast('لا توجد عقارات تطابق معايير البحث', 'error');
+        showToast(currentLanguage === 'ar' ? 'لا توجد عقارات تطابق معايير البحث' : 'No properties match your search criteria', 'error');
     } else {
-        showToast(`✅ تم العثور على ${filteredProperties.length} عقار`, 'success');
+        showToast(`✅ ${currentLanguage === 'ar' ? 'تم العثور على' : 'Found'} ${filteredProperties.length} ${currentLanguage === 'ar' ? 'عقار' : 'properties'}`, 'success');
     }
 }
 
@@ -1036,7 +1039,7 @@ function createPropertyCard(p) {
             <div class="card-specs">
                 <div class="spec-item"><i class="fas fa-ruler-combined spec-icon"></i><span class="spec-value">${p.area}</span><span> ${currentLanguage === 'ar' ? 'م²' : 'm²'}</span></div>
                 <div class="spec-item"><i class="fas fa-door-open spec-icon"></i><span class="spec-value">${p.rooms}</span><span>${currentLanguage === 'ar' ? 'غرف' : 'rooms'}</span></div>
-                <div class="spec-item"><i class="fas fa-layer-group spec-icon"></i><span class="spec-value">${p.floor === 0 ? (currentLanguage === 'ar' ? 'أرضي' : 'Ground') : p.floor}</span><span>${currentLanguage === 'ar' ? 'طابق' : 'floor'}</span></div>
+                <div class="spec-item"><i class="fas fa-layer-group spec-icon"></i><span class="spec-value">${getFloorText(p.floor)}</span><span>${currentLanguage === 'ar' ? 'طابق' : 'floor'}</span></div>
             </div>
             <div class="card-footer">
                 <div class="card-price">
@@ -2421,7 +2424,7 @@ async function openPropertyModal(id) {
         <div class="spec-item-detail"><i class="fas fa-ruler-combined"></i><div><span class="spec-label-detail">${t?.property_specs_area || 'المساحة'}</span><span class="spec-value-detail">${p.area} م²</span></div></div>
         <div class="spec-item-detail"><i class="fas fa-door-open"></i><div><span class="spec-label-detail">${t?.property_specs_rooms || 'الغرف'}</span><span class="spec-value-detail">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span></div></div>
         <div class="spec-item-detail"><i class="fas fa-bath"></i><div><span class="spec-label-detail">${t?.property_specs_bathrooms || 'الحمامات'}</span><span class="spec-value-detail">${p.bathrooms || '—'}</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-layer-group"></i><div><span class="spec-label-detail">${t?.property_specs_floor || 'الطابق'}</span><span class="spec-value-detail">${p.floor === 0 ? (currentLanguage === 'ar' ? 'أرضي' : 'Ground') : p.floor}</span></div></div>
+        <div class="spec-item-detail"><i class="fas fa-layer-group"></i><div><span class="spec-label-detail">${t?.property_specs_floor || 'الطابق'}</span><span class="spec-value-detail">${getFloorText(p.floor)}</span></div></div>
         <div class="spec-item-detail"><i class="fas fa-arrow-up"></i><div><span class="spec-label-detail">${t?.property_specs_elevator || 'مصعد'}</span><span class="spec-value-detail">${getLocalizedText(p, 'elevator')}</span></div></div>
         <div class="spec-item-detail"><i class="fas fa-compass"></i><div><span class="spec-label-detail">${t?.property_specs_direction || 'الاتجاه'}</span><span class="spec-value-detail">${getLocalizedText(p, 'direction')}</span></div></div>
         <div class="spec-item-detail"><i class="fas fa-paint-brush"></i><div><span class="spec-label-detail">${t?.property_specs_finishing || 'التشطيب'}</span><span class="spec-value-detail">${getLocalizedText(p, 'finishing')}</span></div></div>
@@ -3070,20 +3073,71 @@ if (heroClearBtn) {
 // ============================================================
 
 function getRentPeriodText(period) {
+    // تحويل القيمة إلى حروف صغيرة للمقارنة
+    const p = String(period || '').toLowerCase().trim();
+    
     if (currentLanguage === 'ar') {
-        switch(period) {
-            case 'month': return 'شهرياً';
-            case 'year': return 'سنوياً';
-            case 'week': return 'أسبوعياً';
-            default: return 'شهرياً';
+        switch(p) {
+            case 'month':
+            case 'monthly':
+                return 'شهرياً';
+            case 'year':
+            case 'yearly':
+                return 'سنوياً';
+            case 'week':
+            case 'weekly':
+                return 'أسبوعياً';
+            case 'day':
+            case 'daily':
+                return 'يومياً';
+            default:
+                return 'شهرياً';
         }
     } else {
-        switch(period) {
-            case 'month': return 'per month';
-            case 'year': return 'per year';
-            case 'week': return 'per week';
-            default: return 'per month';
+        switch(p) {
+            case 'month':
+            case 'monthly':
+                return 'per month';
+            case 'year':
+            case 'yearly':
+                return 'per year';
+            case 'week':
+            case 'weekly':
+                return 'per week';
+            case 'day':
+            case 'daily':
+                return 'per day';
+            default:
+                return 'per month';
         }
+    }
+}
+
+// دالة للحصول على نص الطابق مترجماً
+function getFloorText(floor) {
+    // تحويل إلى رقم إذا كان نصاً
+    const floorNum = typeof floor === 'string' ? parseInt(floor) : floor;
+    
+    // التحقق من أن القيمة رقم صحيح
+    if (isNaN(floorNum)) {
+        return floor || '—';
+    }
+    
+    if (currentLanguage === 'ar') {
+        if (floorNum === -2) return 'قبو ثاني';
+        if (floorNum === -1) return 'قبو أول';
+        if (floorNum === 0) return 'أرضي';
+        return floorNum;
+    } else {
+        if (floorNum === -2) return 'Basement 2';
+        if (floorNum === -1) return 'Basement 1';
+        if (floorNum === 0) return 'Ground';
+        // تحويل الأرقام الإنجليزية إلى نص ترتيبي
+        if (floorNum === 1) return '1st';
+        if (floorNum === 2) return '2nd';
+        if (floorNum === 3) return '3rd';
+        if (floorNum >= 4) return floorNum + 'th';
+        return floorNum;
     }
 }
 

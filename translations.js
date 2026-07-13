@@ -105,6 +105,9 @@ const translations = {
         footer_copyright: "جميع الحقوق محفوظة",
         footer_design_by: "تصميم وتطوير",
         footer_privacy: "سياسة الخصوصية",
+        floor_basement2: "قبو ثاني",
+        floor_basement1: "قبو أول",
+        floor_ground: "أرضي",
         
         // ---------- مودال التواصل (Contact Modal) - قديم ----------
         contact_title: "تواصل مع فريق عقارات الملك",
@@ -380,6 +383,9 @@ const translations = {
         footer_copyright: "All Rights Reserved",
         footer_design_by: "Design & Development by",
         footer_privacy: "Privacy Policy",
+        floor_basement2: "Basement 2",
+        floor_basement1: "Basement 1",
+        floor_ground: "Ground",
         
         // ---------- Contact Modal (Old) ----------
         contact_title: "Contact King Properties Team",
