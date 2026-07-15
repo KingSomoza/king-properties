@@ -268,11 +268,12 @@ function updatePageTexts() {
     const heroContactBtn = document.querySelector('.btn-outline span');
     if (heroContactBtn) heroContactBtn.innerText = t.hero_contact_btn;
     
+    // في updatePageTexts، عند تحديث heroStatLabels
     const heroStatLabels = document.querySelectorAll('.hero-stats .stat-label');
     if (heroStatLabels.length >= 3) {
         heroStatLabels[0].innerText = t.hero_available_label;
         heroStatLabels[1].innerText = t.hero_sold_label;
-        heroStatLabels[2].innerText = t.hero_visitors_label;
+        heroStatLabels[2].innerText = t.hero_visitors_label; // هذا سيصبح "إجمالي الزوار"
     }
     
     const heroScrollSpan = document.querySelector('.hero-scroll span');
@@ -1512,7 +1513,7 @@ function dotClickHandler(e) {
 }
 
 // ============================================================
-// 7. دوال الإحصائيات - نظام عداد زوار (no-cors فقط)
+// 7. دوال الإحصائيات - نظام عداد زوار
 // ============================================================
 
 async function initStats() {
@@ -1520,11 +1521,37 @@ async function initStats() {
     let visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
     let contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
     
+    // تحديث الواجهة فوراً
     updateStatsUI(visitors, contacts);
     
-    // محاولة جلب البيانات من الخادم (بدون انتظار)
-    fetchVisitorCount().catch(() => {});
-    fetchContactsCount().catch(() => {});
+    // محاولة جلب أحدث البيانات من الخادم
+    try {
+        // جلب عدد الزوار
+        const visitorsRes = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`);
+        const visitorsData = await visitorsRes.json();
+        if (visitorsData && visitorsData.count !== undefined) {
+            visitors = parseInt(visitorsData.count) || 0;
+            localStorage.setItem('kh_visitors_total', visitors);
+        }
+    } catch (err) {
+        console.error('❌ فشل جلب الزوار:', err);
+    }
+    
+    try {
+        // جلب عدد الاستفسارات
+        const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
+        const contactsData = await contactsRes.json();
+        if (contactsData && contactsData.count !== undefined) {
+            contacts = parseInt(contactsData.count) || 0;
+            localStorage.setItem('kh_contacts_total', contacts);
+        }
+    } catch (err) {
+        console.error('❌ فشل جلب الاستفسارات:', err);
+    }
+    
+    // تحديث الواجهة بالبيانات الجديدة
+    updateStatsUI(visitors, contacts);
+    console.log(`📊 الإحصائيات الأولية: ${visitors} زائر, ${contacts} استفسار`);
 }
 
 // دالة جلب عدد الزوار من الخادم - مع no-cors
@@ -1556,214 +1583,12 @@ async function fetchContactsCount() {
     }
 }
 
-// دالة زيادة عدد الزوار - مع no-cors فقط
+// ===== زيادة عدد الزوار (مرة كل 5 دقائق) =====
 async function incrementVisitorCount() {
     const now = Date.now();
     const lastVisitKey = 'kh_last_visit_time';
     const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
-    const fiveMinutes = 5 * 60 * 1000;
-    
-    if (now - lastVisitTime < fiveMinutes) {
-        console.log(`⏳ لم تمر 5 دقائق بعد`);
-        return false;
-    }
-    
-    localStorage.setItem(lastVisitKey, now.toString());
-    
-    try {
-        await fetch(CONFIG.API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                type: 'incrementVisitor',
-                timestamp: now
-            })
-        });
-        
-        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
-        
-        // تحديث العداد محلياً
-        const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        const newCount = currentCount + 1;
-        localStorage.setItem('kh_visitors_total', newCount);
-        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
-        updateStatsUI(newCount, contacts);
-        console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
-        return true;
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحديث عدد الزوار:', error);
-        return false;
-    }
-}
-
-// دالة زيادة عدد الاستفسارات - مع no-cors فقط
-async function incrementContactsCount() {
-    try {
-        await fetch(CONFIG.API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'incrementContacts' })
-        });
-        console.log('✅ تم إرسال طلب زيادة الاستفسارات (no-cors)');
-        
-        // تحديث محلي
-        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
-        const newContacts = currentContacts + 1;
-        localStorage.setItem('kh_contacts_total', newContacts);
-        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        updateStatsUI(visitors, newContacts);
-    } catch (error) {
-        console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
-    }
-}
-
-function updateStatsUI(visitors, contacts) {
-    const available = allProperties.filter(p => p.available).length;
-    const sold = allProperties.filter(p => !p.available).length;
-    
-    // تحديث العناصر
-    const elements = {
-        heroAvailable: available,
-        heroSold: sold,
-        heroVisitors: visitors,
-        statsAvailable: available,
-        statsSold: sold,
-        statsVisitors: visitors,
-        statsContacts: contacts,
-        totalVisitors: visitors
-    };
-    
-    Object.entries(elements).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = value;
-    });
-}
-
-// دالة تحديث الإحصائيات التلقائية
-async function autoRefreshStats() {
-    console.log('🔄 جاري تحديث الإحصائيات...');
-    try {
-        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
-        updateStatsUI(visitors, contacts);
-        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر, ${contacts} استفسار`);
-    } catch (error) {
-        console.error('❌ فشل تحديث الإحصائيات:', error);
-    }
-    setTimeout(autoRefreshStats, 300000);
-}
-
-// بدء التحديث التلقائي
-autoRefreshStats();
-// دالة جلب عدد الزوار من الخادم - مع no-cors
-async function fetchVisitorCount() {
-    try {
-        // ✅ استخدام no-cors (لا يمكن قراءة الرد، لكن الطلب يصل)
-        await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
-            mode: 'no-cors'
-        });
-        
-        // نظراً لأننا لا نستطيع قراءة الرد، نستخدم localStorage
-        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        console.log(`📊 عدد الزوار من localStorage: ${visitors}`);
-        return visitors;
-        
-    } catch (error) {
-        console.error('❌ خطأ في جلب عدد الزوار:', error);
-        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        return visitors;
-    }
-}
-
-// دالة زيادة عدد الزوار مع فاصل زمني 5 دقائق - مع no-cors
-async function incrementVisitorCount() {
-    const now = Date.now();
-    const lastVisitKey = 'kh_last_visit_time';
-    const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
-    const fiveMinutes = 5 * 60 * 1000;
-    
-    if (now - lastVisitTime < fiveMinutes) {
-        console.log(`⏳ لم تمر 5 دقائق بعد`);
-        return false;
-    }
-    
-    localStorage.setItem(lastVisitKey, now.toString());
-    
-    try {
-        // ✅ استخدام no-cors (الطلب يصل لكن لا يمكن قراءة الرد)
-        await fetch(CONFIG.API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                type: 'incrementVisitor',
-                timestamp: now
-            })
-        });
-        
-        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
-        
-        // ✅ تحديث العداد محلياً بزيادة 1
-        const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        const newCount = currentCount + 1;
-        localStorage.setItem('kh_visitors_total', newCount);
-        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
-        updateStatsUI(newCount, contacts);
-        console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
-        return true;
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحديث عدد الزوار:', error);
-        return false;
-    }
-}
-
-// دالة زيادة عدد الاستفسارات - مع no-cors
-async function incrementContactsCount() {
-    try {
-        await fetch(CONFIG.API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'incrementContacts' })
-        });
-        console.log('✅ تم إرسال طلب زيادة الاستفسارات (no-cors)');
-        
-        // تحديث محلي
-        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
-        const newContacts = currentContacts + 1;
-        localStorage.setItem('kh_contacts_total', newContacts);
-        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        updateStatsUI(visitors, newContacts);
-    } catch (error) {
-        console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
-    }
-}
-
-// دالة تحديث الإحصائيات
-async function autoRefreshStats() {
-    console.log('🔄 جاري تحديث الإحصائيات...');
-    try {
-        // استخدام localStorage فقط (بما أن no-cors لا يسمح بقراءة الرد)
-        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
-        updateStatsUI(visitors, contacts);
-        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر, ${contacts} استفسار`);
-    } catch (error) {
-        console.error('❌ فشل تحديث الإحصائيات:', error);
-    }
-    setTimeout(autoRefreshStats, 300000);
-}
-
-// دالة زيادة عدد الزوار مع فاصل زمني 5 دقائق
-async function incrementVisitorCount() {
-    const now = Date.now();
-    const lastVisitKey = 'kh_last_visit_time';
-    const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
-    const fiveMinutes = 5 * 60 * 1000; // 5 دقائق بالميلي ثانية
+    const fiveMinutes = 5 * 60 * 1000; // 5 دقائق
     
     // التحقق من مرور 5 دقائق منذ آخر تسجيل
     if (now - lastVisitTime < fiveMinutes) {
@@ -1775,7 +1600,7 @@ async function incrementVisitorCount() {
     localStorage.setItem(lastVisitKey, now.toString());
     
     try {
-        // ✅ استخدام cors بدلاً من no-cors للحصول على الرد
+        // إرسال طلب زيادة الزوار
         const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1800,7 +1625,7 @@ async function incrementVisitorCount() {
             console.log(`📊 العدد الجديد من الخادم: ${newCount}`);
             return true;
         } else {
-            // إذا لم يستجب الخادم بشكل صحيح، قم بزيادة محلية
+            // زيادة محلية كحل بديل
             const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
             const newCount = currentCount + 1;
             localStorage.setItem('kh_visitors_total', newCount);
@@ -1812,25 +1637,18 @@ async function incrementVisitorCount() {
     } catch (error) {
         console.error('❌ خطأ في تحديث عدد الزوار:', error);
         
-        // في حالة الخطأ، قم بزيادة محلية
+        // زيادة محلية كحل بديل
         const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
         const newCount = currentCount + 1;
         localStorage.setItem('kh_visitors_total', newCount);
         const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
         updateStatsUI(newCount, contacts);
         console.log(`📊 العدد الجديد (تقديري محلي بعد الخطأ): ${newCount}`);
-        
-        // محاولة مرة أخرى بعد 30 ثانية
-        setTimeout(() => {
-            console.log('🔄 إعادة محاولة تسجيل الزائر...');
-            incrementVisitorCount();
-        }, 30000);
-        
         return false;
     }
 }
 
-// دالة زيادة عدد الاستفسارات (للمستخدمين الذين يتواصلون)
+/// ===== زيادة عدد الاستفسارات =====
 async function incrementContactsCount() {
     try {
         const response = await fetch(CONFIG.API_URL, {
@@ -1864,12 +1682,13 @@ async function incrementContactsCount() {
     }
 }
 
+// ===== تحديث واجهة الإحصائيات =====
 function updateStatsUI(visitors, contacts) {
     const available = allProperties.filter(p => p.available).length;
     const sold = allProperties.filter(p => !p.available).length;
     
+    // تحديث العناصر مع تنسيق الأرقام
     const elements = {
-        // العناصر القديمة (احتفظ بها للتوافق)
         heroAvailable: available,
         heroSold: sold,
         heroVisitors: visitors,
@@ -1878,7 +1697,6 @@ function updateStatsUI(visitors, contacts) {
         statsVisitors: visitors,
         statsContacts: contacts,
         totalVisitors: visitors,
-        // ✅ العناصر الجديدة للإحصائيات المدمجة
         heroAvailableInline: available,
         heroSoldInline: sold,
         heroVisitorsInline: visitors
@@ -1886,43 +1704,77 @@ function updateStatsUI(visitors, contacts) {
     
     Object.entries(elements).forEach(([id, value]) => {
         const el = document.getElementById(id);
-        if (el) el.innerText = value;
+        if (el) {
+            // تنسيق الرقم مع فواصل (مثل 1,234)
+            el.innerText = Number(value).toLocaleString();
+        }
     });
 }
 
+/// ===== تحديث الإحصائيات التلقائي =====
 async function autoRefreshStats() {
     console.log('🔄 جاري تحديث الإحصائيات...');
     try {
-        // تحديث عدد الزوار
-        await fetchVisitorCount();
+        // محاولة جلب عدد الزوار من الخادم
+        try {
+            const visitorsRes = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`);
+            const visitorsData = await visitorsRes.json();
+            if (visitorsData && visitorsData.count !== undefined) {
+                const visitors = parseInt(visitorsData.count) || 0;
+                localStorage.setItem('kh_visitors_total', visitors);
+                console.log(`📊 عدد الزوار من الخادم: ${visitors}`);
+            }
+        } catch (err) {
+            console.error('❌ فشل جلب الزوار:', err);
+        }
         
-        // تحديث عدد الاستفسارات
+        // محاولة جلب عدد الاستفسارات من الخادم
         try {
             const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
             const contactsData = await contactsRes.json();
             if (contactsData && contactsData.count !== undefined) {
                 const contacts = parseInt(contactsData.count) || 0;
                 localStorage.setItem('kh_contacts_total', contacts);
-                const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-                updateStatsUI(visitors, contacts);
                 console.log(`📊 عدد الاستفسارات من الخادم: ${contacts}`);
             }
         } catch (err) {
             console.error('❌ فشل جلب الاستفسارات:', err);
         }
         
-        console.log(`✅ تم تحديث الإحصائيات`);
+        // تحديث الواجهة
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(visitors, contacts);
+        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر, ${contacts} استفسار`);
+        
     } catch (error) {
-        console.error('❌ فشل تحديث الإحصائيات، إعادة المحاولة بعد 30 ثانية');
-        setTimeout(autoRefreshStats, 30000);
-        return;
+        console.error('❌ فشل تحديث الإحصائيات:', error);
     }
-    // إعادة الجدولة بعد 5 دقائق
-    setTimeout(autoRefreshStats, 300000);
+    // إعادة الجدولة بعد 30 ثانية
+    setTimeout(autoRefreshStats, 30000);
 }
 
-// بدلاً من setInterval، استخدم استدعاء أولي
+// بدء التحديث التلقائي
 autoRefreshStats();
+// دالة جلب عدد الزوار من الخادم - مع no-cors
+async function fetchVisitorCount() {
+    try {
+        // ✅ استخدام no-cors (لا يمكن قراءة الرد، لكن الطلب يصل)
+        await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
+            mode: 'no-cors'
+        });
+        
+        // نظراً لأننا لا نستطيع قراءة الرد، نستخدم localStorage
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        console.log(`📊 عدد الزوار من localStorage: ${visitors}`);
+        return visitors;
+        
+    } catch (error) {
+        console.error('❌ خطأ في جلب عدد الزوار:', error);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        return visitors;
+    }
+}
 
 
 // ============================================================
@@ -2290,34 +2142,46 @@ async function openPropertyModal(id) {
     const parking = getLocalizedText(p, 'parking');
     const t = translations[currentLanguage];
     
-    document.getElementById('propModalTitle').textContent = title;
-    document.getElementById('propModalCode').innerHTML = `<i class="fas fa-barcode"></i> ${t?.property_code_prefix || 'كود:'} ${p.id}`;
-    document.getElementById('propModalName').textContent = title;
-    
-    const rentPeriodText = (p.type === 'rent') ? ` / ${getRentPeriodText(p.rent_period)}` : '';
-    
-    // عرض السعر في المودال
-    const priceElement = document.getElementById('propModalPrice');
-    if (p.isPriceNumeric) {
-        priceElement.textContent = `${Number(p.price).toLocaleString()} ${p.currency}`;
-        priceElement.style.color = 'var(--primary)';
-        priceElement.style.fontSize = '32px';
-        priceElement.style.fontWeight = '800';
-    } else {
-        priceElement.textContent = p.price;
-        priceElement.style.color = '#e74c3c';
-        priceElement.style.fontSize = '28px';
-        priceElement.style.fontWeight = '800';
-    }
-    
-    document.getElementById('propModalLocation').textContent = district ? `${district} - ${city}` : p.location;
-    document.getElementById('propModalDesc').textContent = description;
-    document.getElementById('propModalType').innerHTML = p.type === 'sale' ? '🏷️ ' + (t?.filter_transaction_sale || 'للبيع') : '🔑 ' + (t?.filter_transaction_rent || 'للإيجار');
-    
-    const viewsEl = document.getElementById('propModalViews');
-    if (viewsEl) viewsEl.innerHTML = `<i class="fas fa-eye"></i> ${p.views} ${t?.property_views || 'مشاهدة'}`;
-    renderProperties();
-    
+        // في دالة openPropertyModal
+
+        // ===== تحديث عنوان العقار =====
+        document.getElementById('propModalTitle').textContent = title;
+        document.getElementById('propModalName').textContent = title;
+
+        // ===== تحديث كود العقار =====
+        const codeEl = document.getElementById('propModalCode');
+        if (codeEl) {
+            codeEl.innerHTML = `<i class="fas fa-barcode"></i> ${p.id}`;
+        }
+
+        // ===== تحديث نوع العملية =====
+        const typeEl = document.getElementById('propModalType');
+        if (typeEl) {
+            const typeIcon = p.type === 'sale' ? 'fa-tag' : 'fa-key';
+            const typeText = p.type === 'sale' ? (t?.filter_transaction_sale || 'للبيع') : (t?.filter_transaction_rent || 'للإيجار');
+            typeEl.innerHTML = `<i class="fas ${typeIcon}"></i> ${typeText}`;
+            typeEl.className = `meta-badge type-badge ${p.type === 'sale' ? 'sale' : 'rent'}`;
+        }
+
+        // ===== تحديث الموقع =====
+        const locationEl = document.getElementById('propModalLocation');
+        if (locationEl) {
+            const gov = getLocalizedText(p, 'governorate') || '';
+            const dist = getLocalizedText(p, 'district') || '';
+            const locationText = dist + (dist && gov ? ' - ' : '') + gov;
+            locationEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${locationText || p.location || 'غير محدد'}`;
+        }
+
+        // ===== تحديث المشاهدات والمفضلات =====
+        const viewsCountEl = document.getElementById('viewsCount');
+        if (viewsCountEl) viewsCountEl.textContent = p.views || 0;
+
+        const favCountEl = document.getElementById('modalFavCountDisplay');
+        if (favCountEl) favCountEl.textContent = p.favCount || 0;
+
+        // ===== تحديث الوصف =====
+        document.getElementById('propModalDesc').textContent = description || 'لا يوجد وصف';
+
     // ✅ تعيين الصور الحالية
     currentPropertyImages = p.images || [];
     currentImageIndex = 0;
@@ -2399,106 +2263,235 @@ async function openPropertyModal(id) {
     // ✅ تحديث الصورة/الفيديو
     updateModalImage();
         
-    // المواصفات
-    const specs = document.getElementById('propModalSpecs');
-    if (specs) {
-        // تحضير متغيرات السعر
-        const priceDisplay = p.isPriceNumeric ? 
-            `${Number(p.price).toLocaleString()} ${p.currency}` : 
-            p.price;
-        
-        const priceStyle = p.isPriceNumeric ? 
-            'color:#C9A84C;font-size:18px;font-weight:700' : 
-            'color:#e74c3c;font-size:20px;font-weight:800;background:rgba(231,76,60,0.1);padding:4px 15px;border-radius:8px';
-        
-        const priceBg = p.isPriceNumeric ? 
-            'rgba(201,168,76,0.1)' : 
-            'rgba(231,76,60,0.1)';
-        
-        const priceBorder = p.isPriceNumeric ? 
-            'none' : 
-            '1px dashed #e74c3c';
-        
-        // في دالة openPropertyModal، عند عرض المواصفات
-        specs.innerHTML = `
-        <div class="spec-item-detail"><i class="fas fa-ruler-combined"></i><div><span class="spec-label-detail">${t?.property_specs_area || 'المساحة'}</span><span class="spec-value-detail">${p.area} م²</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-door-open"></i><div><span class="spec-label-detail">${t?.property_specs_rooms || 'الغرف'}</span><span class="spec-value-detail">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-bath"></i><div><span class="spec-label-detail">${t?.property_specs_bathrooms || 'الحمامات'}</span><span class="spec-value-detail">${p.bathrooms || '—'}</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-layer-group"></i><div><span class="spec-label-detail">${t?.property_specs_floor || 'الطابق'}</span><span class="spec-value-detail">${getFloorText(p.floor)}</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-arrow-up"></i><div><span class="spec-label-detail">${t?.property_specs_elevator || 'مصعد'}</span><span class="spec-value-detail">${getLocalizedText(p, 'elevator')}</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-compass"></i><div><span class="spec-label-detail">${t?.property_specs_direction || 'الاتجاه'}</span><span class="spec-value-detail">${getLocalizedText(p, 'direction')}</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-paint-brush"></i><div><span class="spec-label-detail">${t?.property_specs_finishing || 'التشطيب'}</span><span class="spec-value-detail">${getLocalizedText(p, 'finishing')}</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-car"></i><div><span class="spec-label-detail">${t?.property_specs_parking || 'موقف السيارة'}</span><span class="spec-value-detail">${getLocalizedText(p, 'parking')}</span></div></div>
-        <div class="spec-item-detail"><i class="fas fa-file-contract"></i><div><span class="spec-label-detail">${t?.property_specs_ownership || 'سند الملكية'}</span><span class="spec-value-detail">${getLocalizedText(p, 'ownership')}</span></div></div>
-        <div class="spec-item-detail" style="background:${priceBg};border:${priceBorder}">
-            <i class="fas fa-tag" style="color:${p.isPriceNumeric ? '#C9A84C' : '#e74c3c'}"></i>
-            <div>
-                <span class="spec-label-detail">${t?.property_specs_price || 'السعر'}</span>
+    // في دالة openPropertyModal، استبدل قسم المواصفات بهذا:
+const specs = document.getElementById('propModalSpecs');
+if (specs) {
+    // تحضير متغيرات السعر
+    let priceDisplay = p.isPriceNumeric ? 
+        `${Number(p.price).toLocaleString()} ${p.currency}` : 
+        p.price;
+    
+    // إضافة مدة الإيجار إذا كان العقار للإيجار
+    let rentPeriodText = '';
+    if (p.type === 'rent' && p.rent_period) {
+        const periodMap = {
+            'month': currentLanguage === 'ar' ? 'شهرياً' : 'Monthly',
+            'year': currentLanguage === 'ar' ? 'سنوياً' : 'Yearly',
+            'week': currentLanguage === 'ar' ? 'أسبوعياً' : 'Weekly',
+            'daily': currentLanguage === 'ar' ? 'يومياً' : 'Daily'
+        };
+        rentPeriodText = periodMap[p.rent_period.toLowerCase()] || '';
+    }
+    
+    const priceStyle = p.isPriceNumeric ? 
+        'color:#C9A84C;font-size:28px;font-weight:800;' : 
+        'color:#e74c3c;font-size:24px;font-weight:800;background:rgba(231,76,60,0.1);padding:4px 20px;border-radius:8px;display:inline-block;';
+    
+    const priceBg = p.isPriceNumeric ? 
+        'rgba(201,168,76,0.08)' : 
+        'rgba(231,76,60,0.08)';
+    
+    const priceBorder = p.isPriceNumeric ? 
+        '1px solid rgba(201,168,76,0.2)' : 
+        '1px solid rgba(231,76,60,0.2)';
+    
+    // بناء قائمة المواصفات
+    specs.innerHTML = `
+        <!-- السعر - بارز في الأعلى -->
+        <div class="spec-item-detail price-spec" style="
+            background: ${priceBg};
+            border: ${priceBorder};
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            grid-column: 1 / -1;
+        ">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-tag" style="color:${p.isPriceNumeric ? '#C9A84C' : '#e74c3c'}; font-size: 24px;"></i>
+                <span class="spec-label-detail" style="font-size: 16px; color: var(--gray);">${t?.property_specs_price || 'السعر'}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <span class="spec-value-detail" style="${priceStyle}">${priceDisplay}</span>
+                ${rentPeriodText ? `<span style="font-size: 18px; font-weight: 600; color: var(--gray); background: rgba(0,0,0,0.05); padding: 4px 16px; border-radius: 20px;">${rentPeriodText}</span>` : ''}
             </div>
         </div>
-        `;
-    }
-    
-    // الخريطة
-    const mapDiv = document.getElementById('propModalMap');
-    if (mapDiv) {
-        const hasValidCoordinates = p.lat && p.lng && p.lat !== 0 && p.lng !== 0;
         
-        if (hasValidCoordinates) {
-            const lat = p.lat;
-            const lng = p.lng;
-            
-            mapDiv.innerHTML = `
-                <div style="position:relative;width:100%;height:100%;min-height:200px;background:#f5f5f5;border-radius:12px;overflow:hidden;">
+        <!-- باقي المواصفات - كل صف: التسمية في طرف والقيمة في الطرف الآخر -->
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-ruler-combined" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_area || 'المساحة'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.area} م²</span>
+        </div>
+        
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-door-open" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_rooms || 'الغرف'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span>
+        </div>
+        
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-bath" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_bathrooms || 'الحمامات'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.bathrooms || '—'}</span>
+        </div>
+        
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-layer-group" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_floor || 'الطابق'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getFloorText(p.floor)}</span>
+        </div>
+        
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-arrow-up" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_elevator || 'مصعد'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'elevator')}</span>
+        </div>
+        
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-compass" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_direction || 'الاتجاه'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'direction')}</span>
+        </div>
+        
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-paint-brush" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_finishing || 'التشطيب'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'finishing')}</span>
+        </div>
+        
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-car" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_parking || 'موقف السيارة'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'parking')}</span>
+        </div>
+        
+        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-file-contract" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_ownership || 'سند الملكية'}
+            </span>
+            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'ownership')}</span>
+        </div>
+    `;
+}
+    
+// ===== الخريطة - تظهر تلقائياً مع تفاعل كامل =====
+const mapDiv = document.getElementById('propModalMap');
+if (mapDiv) {
+    const hasValidCoordinates = p.lat && p.lng && p.lat !== 0 && p.lng !== 0;
+    
+    if (hasValidCoordinates) {
+        const lat = p.lat;
+        const lng = p.lng;
+        
+        // استخدام iframe مع خيارات تفاعلية كاملة
+        const mapUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed&hl=${currentLanguage === 'ar' ? 'ar' : 'en'}`;
+        
+        mapDiv.innerHTML = `
+            <div class="map-wrapper-interactive">
+                <div class="map-container-interactive">
                     <iframe 
-                        src="https://www.google.com/maps?q=${lat},${lng}&output=embed" 
+                        src="${mapUrl}"
                         width="100%" 
                         height="100%" 
-                        style="border:0;min-height:250px;"
+                        style="border:0;"
                         loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade">
+                        allowfullscreen
+                        referrerpolicy="no-referrer-when-downgrade"
+                        title="موقع العقار على الخريطة">
                     </iframe>
+                    <!-- زر فتح في خرائط جوجل - أعلى اليسار -->
                     <button onclick="window.open('https://www.google.com/maps?q=${lat},${lng}', '_blank')" 
-                            style="position:absolute;bottom:15px;left:50%;transform:translateX(-50%);
-                                background:#C9A84C;color:#1A1410;border:none;
-                                padding:12px 30px;border-radius:50px;font-size:16px;font-weight:700;
-                                cursor:pointer;box-shadow:0 4px 15px rgba(201,168,76,0.4);
-                                transition:all 0.3s ease;z-index:10;
-                                display:flex;align-items:center;gap:10px;"
-                            onmouseover="this.style.transform='translateX(-50%) scale(1.05)'" 
-                            onmouseout="this.style.transform='translateX(-50%) scale(1)'">
-                        <i class="fas fa-map-marked-alt"></i> 
-                        <span>${currentLanguage === 'ar' ? 'فتح الموقع على خرائط جوجل' : 'Open in Google Maps'}</span>
+                            class="map-open-btn-top-left">
+                        <i class="fas fa-external-link-alt"></i> 
+                        <span>${currentLanguage === 'ar' ? 'فتح في خرائط جوجل' : 'Open in Google Maps'}</span>
                     </button>
                 </div>
-            `;
-        } else {
-            mapDiv.innerHTML = `
-                <div style="background:#f8f8f8;border-radius:12px;padding:40px 20px;text-align:center;color:#999;border:1px dashed #ddd;">
-                    <i class="fas fa-map-pin" style="font-size:40px;color:#C9A84C;display:block;margin-bottom:15px;"></i>
-                    <p style="font-size:16px;font-weight:500;color:#666;">
-                        ${currentLanguage === 'ar' ? '📍 لم يتم تحديد موقع هذا العقار على الخريطة' : '📍 Location not specified for this property'}
-                    </p>
-                    <p style="font-size:13px;color:#999;margin-top:8px;">
-                        ${currentLanguage === 'ar' ? 'يمكنك التواصل معنا للحصول على الموقع الدقيق' : 'Contact us for the exact location'}
-                    </p>
+                <div class="map-info-bar">
+                    <div class="map-coordinates-interactive">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
+                    </div>
+                    <div class="map-zoom-hint">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <span>${currentLanguage === 'ar' ? 'اسحب للتنقل • درّج للتكبير' : 'Drag to navigate • Scroll to zoom'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        mapDiv.innerHTML = `
+            <div class="map-placeholder-interactive">
+                <div class="map-placeholder-icon-interactive">
+                    <i class="fas fa-map-pin"></i>
+                </div>
+                <h4>${currentLanguage === 'ar' ? '📍 لم يتم تحديد الموقع' : '📍 Location Not Set'}</h4>
+                <p>${currentLanguage === 'ar' ? 'يمكنك التواصل معنا للحصول على الموقع الدقيق' : 'Contact us for the exact location'}</p>
+                <button onclick="openContactModal('${p.id}')" class="map-contact-btn-interactive">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>${currentLanguage === 'ar' ? 'طلب الموقع' : 'Request Location'}</span>
+                </button>
+            </div>
+        `;
+    }
+}
+    
+    // ===== عقارات مشابهة (مع صورة + اسم + موقع + سعر) =====
+let similar = allProperties.filter(x => x.id !== id && x.type === p.type && x.available && Math.abs(x.price - p.price) <= (p.price * 0.3));
+if (similar.length < 3) {
+    similar = [...similar, ...allProperties.filter(x => x.id !== id && x.type === p.type && x.available && !similar.includes(x))].slice(0, 4);
+}
+
+const suggDiv = document.getElementById('propSuggestions');
+if (suggDiv) {
+    if (similar.length > 0) {
+        suggDiv.innerHTML = similar.map(s => {
+            // الحصول على أول صورة
+            let firstImage = DEFAULT_IMAGE;
+            if (s.images && Array.isArray(s.images) && s.images.length > 0) {
+                firstImage = s.images[0];
+            } else if (s.images && typeof s.images === 'string') {
+                const imagesArray = s.images.split(',').map(img => img.trim());
+                if (imagesArray.length > 0) {
+                    firstImage = imagesArray[0];
+                }
+            }
+            
+            const sTitle = getLocalizedText(s, 'title');
+            const sLocation = getLocalizedText(s, 'district') + (getLocalizedText(s, 'city') ? ' - ' + getLocalizedText(s, 'city') : '');
+            const sPrice = s.isPriceNumeric ? 
+                `${Number(s.price).toLocaleString()} ${s.currency}` : 
+                s.price;
+            
+            return `
+                <div class="suggestion-card-luxury" onclick="openPropertyModal('${s.id}')">
+                    <div class="suggestion-image">
+                        <img src="${firstImage}" alt="${sTitle}" loading="lazy">
+                    </div>
+                    <div class="suggestion-info">
+                        <div class="s-title">${sTitle}</div>
+                        <div class="s-location"><i class="fas fa-map-marker-alt"></i> ${sLocation}</div>
+                        <div class="s-price">${sPrice}</div>
+                    </div>
                 </div>
             `;
-        }
+        }).join('');
+    } else {
+        suggDiv.innerHTML = `<div class="no-similar">${t?.property_no_similar || 'لا توجد عقارات مشابهة'}</div>`;
     }
-    
-    // عقارات مشابهة
-    let similar = allProperties.filter(x => x.id !== id && x.type === p.type && x.available && Math.abs(x.price - p.price) <= (p.price * 0.3));
-    if (similar.length < 3) {
-        similar = [...similar, ...allProperties.filter(x => x.id !== id && x.type === p.type && x.available && !similar.includes(x))].slice(0, 3);
-    }
-    const suggDiv = document.getElementById('propSuggestions');
-    if (suggDiv) {
-        suggDiv.innerHTML = similar.length ? 
-            similar.map(s => `<div class="suggestion-card" onclick="openPropertyModal('${s.id}')"><div class="s-title">${getLocalizedText(s, 'title')}</div><div class="s-price">${s.isPriceNumeric ? `${Number(s.price).toLocaleString()} ${s.currency}` : s.price}</div></div>`).join('') : 
-            `<div>${t?.property_no_similar || 'لا توجد عقارات مشابهة'}</div>`;
-    }
+}
     
     document.getElementById('propertyModal').classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -3527,7 +3520,21 @@ function initFiltersToggle() {
     const btn = document.getElementById('filtersToggleBtn');
     const wrap = document.getElementById('filtersWrapper');
     if (btn && wrap) {
-        btn.addEventListener('click', () => wrap.classList.toggle('show'));
+        btn.addEventListener('click', function() {
+            wrap.classList.toggle('show');
+            this.classList.toggle('active');
+            
+            // تغيير النص حسب الحالة
+            const span = this.querySelector('span');
+            const t = translations[currentLanguage];
+            if (wrap.classList.contains('show')) {
+                span.textContent = t?.filters_toggle_hide || 'إخفاء الفلاتر';
+                this.querySelector('i').style.transform = 'rotate(180deg)';
+            } else {
+                span.textContent = t?.filters_toggle_show || 'إظهار الفلاتر';
+                this.querySelector('i').style.transform = 'rotate(0deg)';
+            }
+        });
     }
 }
 

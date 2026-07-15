@@ -26,8 +26,11 @@ const translations = {
         hero_contact_btn: "تواصل مع مستشار",
         hero_available_label: "عقار متاح",
         hero_sold_label: "تم البيع/الإيجار",
-        hero_visitors_label: "زائر اليوم",
+        hero_visitors_label: "إجمالي الزوار",
         hero_scroll: "تصفح العقارات",
+        stats_sold_label: "تم البيع/الإيجار",
+        stats_visitors_label: "إجمالي الزوار",
+        stats_contacts_label: "استفسار",
         
         // ---------- قسم الفلاتر ----------
         filters_title: "فلترة العقارات",
@@ -69,6 +72,7 @@ const translations = {
         btn_refresh: "تحديث",
         btn_hide_sold: "إخفاء المباعة",
         btn_show_all: "إظهار الكل",
+        
         
         // ---------- قسم العقارات ----------
         section_badge: "أحدث العقارات",
@@ -149,6 +153,7 @@ const translations = {
         property_favorite_btn: "إضافة للمفضلة",
         property_copy_link_btn: "نسخ الرابط",
         property_no_similar: "لا توجد عقارات مشابهة",
+        property_favorites: "مفضلة",
         
         // ---------- مودال سياسة الخصوصية (Privacy Modal) ----------
         privacy_title: "سياسة الخصوصية",
@@ -304,8 +309,12 @@ const translations = {
         hero_contact_btn: "Contact Consultant",
         hero_available_label: "Available",
         hero_sold_label: "Sold/Rented",
-        hero_visitors_label: "Visitors",
+        hero_visitors_label: "Total Visitors",
+        stats_available_label: "Available",
         hero_scroll: "Browse Properties",
+        stats_sold_label: "Sold/Rented",
+        stats_visitors_label: "Total Visitors",
+        stats_contacts_label: "Inquiries",
         
         // ---------- Filters Section ----------
         filters_title: "Filter Properties",
@@ -427,6 +436,7 @@ const translations = {
         property_favorite_btn: "Add to Favorites",
         property_copy_link_btn: "Copy Link",
         property_no_similar: "No similar properties found",
+        property_favorites: "favorites",
         
         // ---------- Privacy Modal ----------
         privacy_title: "Privacy Policy",

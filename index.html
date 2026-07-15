@@ -122,19 +122,19 @@
                 <div class="hero-stats-luxury">
                     <div class="stat-card-luxury">
                         <div class="stat-number-luxury" id="heroAvailable">0</div>
-                        <div class="stat-label-luxury">عقار متاح</div>
+                        <div class="stat-label-luxury" data-i18n="hero_available_label">عقار متاح</div>
                         <div class="stat-icon-luxury"><i class="fas fa-home"></i></div>
                     </div>
                     <div class="stat-divider-luxury"></div>
                     <div class="stat-card-luxury">
                         <div class="stat-number-luxury" id="heroSold">0</div>
-                        <div class="stat-label-luxury">تم البيع/الإيجار</div>
+                        <div class="stat-label-luxury" data-i18n="hero_sold_label">تم البيع/الإيجار</div>
                         <div class="stat-icon-luxury"><i class="fas fa-handshake"></i></div>
                     </div>
                     <div class="stat-divider-luxury"></div>
                     <div class="stat-card-luxury">
                         <div class="stat-number-luxury" id="heroVisitors">0</div>
-                        <div class="stat-label-luxury">زائر اليوم</div>
+                        <div class="stat-label-luxury" data-i18n="hero_visitors_label">إجمالي الزوار</div>
                         <div class="stat-icon-luxury"><i class="fas fa-user-friends"></i></div>
                     </div>
                 </div>
@@ -262,6 +262,8 @@
                     </div>
                 </div>
                 <p class="footer-description">وسيطك الموثوق للعقارات في سوريا. نقدم خدمات بيع وإيجار العقارات بأفضل الأسعار وأعلى جودة.</p>
+                
+                <!-- أزرار التواصل الاجتماعي - في المنتصف على الجوال -->
                 <div class="footer-social">
                     <a href="https://www.facebook.com/share/1BRFixuVT9/" class="social-link facebook" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                     <a href="https://www.instagram.com/king_housess?igsh=YjFscTRpNzM2dTY1" class="social-link instagram" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
@@ -269,6 +271,7 @@
                 </div>
             </div>
 
+            <!-- باقي محتوى الفوتر -->
             <div class="footer-links">
                 <h4 data-i18n="footer_quick_links">روابط سريعة</h4>
                 <ul>
@@ -295,27 +298,28 @@
                 </button>
             </div>
 
+            <!-- إحصائيات الفوتر -->
             <div class="footer-stats">
                 <div class="footer-stats-grid">
                     <div class="footer-stat-item">
                         <i class="fas fa-home"></i>
                         <span class="footer-stat-number" id="statsAvailable">0</span>
-                        <span class="footer-stat-label">عقار متاح</span>
+                        <span class="footer-stat-label" data-i18n="stats_available_label">عقار متاح</span>
                     </div>
                     <div class="footer-stat-item">
                         <i class="fas fa-handshake"></i>
                         <span class="footer-stat-number" id="statsSold">0</span>
-                        <span class="footer-stat-label">تم البيع/الإيجار</span>
+                        <span class="footer-stat-label" data-i18n="stats_sold_label">تم البيع/الإيجار</span>
                     </div>
                     <div class="footer-stat-item">
                         <i class="fas fa-globe"></i>
                         <span class="footer-stat-number" id="statsVisitors">0</span>
-                        <span class="footer-stat-label">زائر للموقع</span>
+                        <span class="footer-stat-label" data-i18n="stats_visitors_label">إجمالي الزوار</span>
                     </div>
                     <div class="footer-stat-item">
                         <i class="fab fa-whatsapp"></i>
                         <span class="footer-stat-number" id="statsContacts">0</span>
-                        <span class="footer-stat-label">استفسار</span>
+                        <span class="footer-stat-label" data-i18n="stats_contacts_label">استفسار</span>
                     </div>
                 </div>
             </div>
@@ -430,41 +434,89 @@
                 <div class="gallery-thumbs" id="galleryThumbs"></div>
             </div>
             
-            <!-- ===== هذا القسم كان فارغاً، أعدنا ملئه ===== -->
+            <!-- ===== معلومات العقار ===== -->
             <div class="property-info">
+
+                <!-- ===== رأس العقار ===== -->
                 <div class="property-header">
-                    <div>
-                        <h2 id="propModalName">العنوان</h2>
-                        <p class="property-code" id="propModalCode">كود: --</p>
-                    </div>
-                    <div class="property-price-box">
-                        <div class="property-price" id="propModalPrice">--</div>
-                        <div class="property-views" id="propModalViews">
-                            <i class="fas fa-eye"></i> <span id="viewsCount">0</span> مشاهدة
+                    <div class="property-title-group">
+                        <h2 id="propModalName">شقة فاخرة في الميدان</h2>
+                        <div class="property-code" id="propModalCode">
+                            <i class="fas fa-barcode"></i> KH-007
                         </div>
                     </div>
                 </div>
-                <div class="property-meta">
-                    <span class="meta-badge" id="propModalType">--</span>
-                    <span class="meta-badge"><i class="fas fa-map-marker-alt"></i> <span id="propModalLocation">--</span></span>
+
+                <!-- ===== معلومات إضافية (نوع + موقع) ===== -->
+                <div class="property-meta-row">
+                    <span class="meta-badge type-badge" id="propModalType">
+                        <i class="fas fa-key"></i> للإيجار
+                    </span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-badge location-badge" id="propModalLocation">
+                        <i class="fas fa-map-marker-alt"></i> الميدان - دمشق
+                    </span>
+                    <span class="meta-divider"></span>
+                    <span class="meta-badge stats-badge">
+                        <span class="stat-item"><i class="fas fa-eye"></i> <span id="viewsCount">2</span></span>
+                        <span class="stat-divider-small"></span>
+                        <span class="stat-item"><i class="fas fa-heart" style="color:#e74c3c;"></i> <span id="modalFavCountDisplay">0</span></span>
+                    </span>
                 </div>
-                <div class="property-description"><h4>الوصف</h4><p id="propModalDesc">--</p></div>
-                <div class="property-specs"><h4>المواصفات</h4><div class="specs-grid" id="propModalSpecs"></div></div>
-                <div class="property-map"><h4>الموقع على الخريطة</h4><div id="propModalMap" class="map-container"></div></div>
-                <div class="property-suggestions"><h4>عقارات مشابهة</h4><div class="suggestions-grid" id="propSuggestions"></div></div>
+
+                <!-- ===== خط فاصل ===== -->
+                <div class="section-divider"></div>
+
+                <!-- ===== الوصف ===== -->
+                <div class="property-description">
+                    <h4><i class="fas fa-align-left"></i> <span data-i18n="property_description_title">الوصف</span></h4>
+                    <p id="propModalDesc">--</p>
+                </div>
+
+                <!-- ===== خط فاصل ===== -->
+                <div class="section-divider"></div>
+
+                <!-- ===== المواصفات ===== -->
+                <div class="property-specs">
+                    <h4><i class="fas fa-list-ul"></i> <span data-i18n="property_specs_title">المواصفات</span></h4>
+                    <div class="specs-grid" id="propModalSpecs"></div>
+                </div>
+
+                <!-- ===== خط فاصل ===== -->
+                <div class="section-divider"></div>
+
+                <!-- ===== الخريطة ===== -->
+                <div class="property-map">
+                    <h4><i class="fas fa-map"></i> <span data-i18n="property_map_title">الموقع على الخريطة</span></h4>
+                    <div id="propModalMap" class="map-container"></div>
+                </div>
+
+                <!-- ===== خط فاصل ===== -->
+                <div class="section-divider"></div>
+
+                <!-- ===== عقارات مشابهة ===== -->
+            <div class="property-suggestions">
+                <h4><i class="fas fa-building"></i> <span data-i18n="property_similar_title">عقارات مشابهة</span></h4>
+                <div class="suggestions-grid" id="propSuggestions"></div>
+            </div>
+
+                <!-- ===== خط فاصل ===== -->
+                <div class="section-divider"></div>
+
+                <!-- ===== الأزرار ===== -->
                 <div class="property-actions">
                     <button class="action-btn contact" onclick="contactFromProperty()">
-                        <i class="fab fa-whatsapp"></i><span>تواصل بخصوص هذا العقار</span>
+                        <i class="fab fa-whatsapp"></i> <span data-i18n="property_contact_btn">تواصل</span>
                     </button>
                     <button class="action-btn share" onclick="shareFromModal()">
-                        <i class="fas fa-share-alt"></i> <span>مشاركة العقار</span>
+                        <i class="fas fa-share-alt"></i> <span data-i18n="property_share_btn">مشاركة</span>
                     </button>
                     <button class="action-btn favorite" onclick="toggleFavoriteFromModal()">
-                        <i class="far fa-heart"></i> <span>إضافة للمفضلة</span>
+                        <i class="far fa-heart"></i> <span data-i18n="property_favorite_btn">مفضلة</span>
                         <span id="modalFavCount" style="display: none;"></span>
                     </button>
                     <button class="action-btn copy-link" onclick="copyPropertyLink()">
-                        <i class="fas fa-link"></i> <span>نسخ الرابط</span>
+                        <i class="fas fa-link"></i> <span data-i18n="property_copy_link_btn">نسخ</span>
                     </button>
                 </div>
             </div>
