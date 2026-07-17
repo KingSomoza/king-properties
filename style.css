@@ -7912,3 +7912,1324 @@ footer {
         font-size: 10px !important;
     }
 }
+
+/* ============================================
+   FIX: SEARCH DROPDOWN - ثابتة على الهاتف
+   ============================================ */
+
+/* تثبيت القائمة المنسدلة */
+.hero-search-wrapper {
+    position: relative !important;
+    z-index: 99999 !important;
+    overflow: visible !important;
+}
+
+.hero-search-dropdown {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: white !important;
+    border-radius: 16px !important;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.25) !important;
+    z-index: 999999 !important;
+    max-height: 400px !important;
+    overflow-y: auto !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+}
+
+/* ===== استجابة للجوال ===== */
+@media (max-width: 768px) {
+    .hero-search-dropdown {
+        position: absolute !important;
+        top: calc(100% + 5px) !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        max-height: 300px !important;
+        z-index: 999999 !important;
+        margin-top: 0 !important;
+        border-radius: 12px !important;
+    }
+    
+    .hero-result-item {
+        padding: 10px 12px !important;
+        gap: 10px !important;
+    }
+    
+    .hero-result-image {
+        width: 45px !important;
+        height: 45px !important;
+        flex-shrink: 0 !important;
+        border-radius: 8px !important;
+    }
+    
+    .hero-result-title {
+        font-size: 13px !important;
+        white-space: normal !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+    
+    .hero-result-price {
+        font-size: 14px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .hero-result-code,
+    .hero-result-type {
+        font-size: 10px !important;
+        padding: 1px 8px !important;
+    }
+    
+    .hero-result-location {
+        font-size: 11px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-search-dropdown {
+        max-height: 250px !important;
+        top: calc(100% + 4px) !important;
+        border-radius: 10px !important;
+    }
+    
+    .hero-result-item {
+        padding: 8px 10px !important;
+        gap: 8px !important;
+    }
+    
+    .hero-result-image {
+        width: 38px !important;
+        height: 38px !important;
+    }
+    
+    .hero-result-title {
+        font-size: 12px !important;
+    }
+    
+    .hero-result-price {
+        font-size: 12px !important;
+    }
+}
+
+/* ============================================
+   PROPERTIES SECTION
+   ============================================ */
+   .properties-section { padding: 30px 0; }
+   .section-header {
+       text-align: center;
+       margin-bottom: 25px;
+       margin-top: 25px;
+   }
+   .section-badge {
+       display: inline-block;
+       background: rgba(201,168,76,0.1);
+       color: var(--primary);
+       padding: 5px 16px;
+       border-radius: 30px;
+       font-size: 14px;
+       font-weight: 600;
+       margin-bottom: 8px;
+   }
+   .section-title {
+       font-size: 40px;
+       font-weight: 800;
+       margin-bottom: 5px;
+   }
+   .section-subtitle {
+       color: var(--gray);
+       font-size: 18px;
+       margin-bottom: 5px;
+   }
+   .results-info {
+       margin-top: 10px;
+       font-size: 16px;
+       color: var(--gray);
+   }
+   .results-info span:nth-child(2) {
+       color: var(--primary);
+       font-weight: 800;
+       font-size: 22px;
+       margin: 0 5px;
+   }
+   
+   /* Property Grid */
+   .properties-grid {
+       display: grid;
+       grid-template-columns: repeat(3, 1fr);
+       gap: 20px;
+   }
+   
+   /* Property Card */
+   .property-card {
+       position: relative;
+       background: white;
+       border-radius: 12px;
+       overflow: hidden;
+       transition: var(--transition);
+       max-width: 100%;
+       height: auto;
+   }
+   .property-card:hover {
+       transform: translateY(-8px);
+       box-shadow: var(--shadow-hover);
+   }
+   .property-card.featured-property {
+       border: 4px solid var(--primary);
+       box-shadow: 0 0 20px rgba(201,168,76,0.3);
+   }
+   .card-images {
+       position: relative;
+       width: 100%;
+       height: 200px;
+       overflow: hidden;
+   }
+   .card-images img {
+       width: 100%;
+       height: 100%;
+       object-fit: cover;
+       transition: transform 0.5s ease;
+   }
+   .property-card:hover .card-images img {
+       transform: scale(1.05);
+   }
+   
+   /* الصورة الافتراضية (الشعار) عندما لا توجد صور */
+   .card-images img[src*="king-propertis-logo"],
+   .card-images img.default-image {
+       object-fit: contain !important;
+       padding: 10px;
+       background: #f5f5f5;
+       transform: none !important;
+   }
+   .property-card:hover .card-images img[src*="king-propertis-logo"] {
+       transform: scale(1) !important;
+   }
+   
+   
+   /* كود العقار - يظهر في الأسفل مع المعلومات */
+   .card-code {
+       display: inline-block;
+       background: rgba(201,168,76,0.15);
+       color: var(--primary);
+       padding: 4px 14px;
+       border-radius: 20px;
+       font-size: 8px;
+       font-weight: 700;
+       border: 1px solid rgba(201,168,76,0.2);
+       letter-spacing: 0.5px;
+   }
+   .card-badges {
+       position: absolute;
+       top: 15px;
+       right: 15px;
+       z-index: 25;
+   }
+   .badge-type {
+       padding: 6px 14px;
+       border-radius: 20px;
+       font-size: 13px;
+       font-weight: 700;
+       background: var(--primary);
+       color: var(--white);
+   }
+   .featured-badge {
+       position: absolute;
+       top: 15px;
+       left: 3px;
+       background: var(--primary);
+       color: #1a1410;
+       padding: 5px 12px;
+       border-radius: 30px;
+       font-size: 13px;
+       font-weight: bold;
+       z-index: 25;
+       display: flex;
+       align-items: center;
+       gap: 5px;
+       box-shadow: 0 2px 8px rgba(201,168,76,0.3);
+   }
+   .card-img-nav {
+       position: absolute;
+       top: 50%;
+       transform: translateY(-50%);
+       background: rgba(0,0,0,0.6);
+       color: white;
+       border: none;
+       border-radius: 50%;
+       width: 36px;
+       height: 36px;
+       cursor: pointer;
+       font-size: 18px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       transition: var(--transition);
+       z-index: 5;
+   }
+   .card-img-nav:hover {
+       background: var(--primary);
+       color: white;
+   }
+   .card-img-nav.prev { left: 10px; }
+   .card-img-nav.next { right: 10px; }
+   .card-image-dots {
+       position: absolute;
+       bottom: 12px;
+       left: 50%;
+       transform: translateX(-50%);
+       display: flex;
+       gap: 8px;
+       z-index: 5;
+   }
+   .card-image-dots .img-dot {
+       width: 8px;
+       height: 8px;
+       background: rgba(255,255,255,0.6);
+       border-radius: 50%;
+       cursor: pointer;
+   }
+   .card-image-dots .img-dot.active {
+       width: 20px;
+       border-radius: 4px;
+       background: var(--primary);
+   }
+   .card-body { padding: 20px; }
+   .card-stats {
+       display: flex;
+       gap: 12px;
+       margin-bottom: 10px;
+       flex-wrap: wrap;
+       align-items: center;
+   }
+   .card-views,
+   .card-favs,
+   .card-date {
+       font-size: 13px;
+       color: var(--gray);
+       display: inline-flex;
+       align-items: center;
+       gap: 5px;
+       background: rgba(0,0,0,0.05);
+       padding: 4px 10px;
+       border-radius: 20px;
+   }
+   .card-views i,
+   .card-favs i,
+   .card-date i { color: var(--primary); }
+   .card-favs i { color: #e74c3c; }
+   .card-location {
+       display: flex;
+       align-items: center;
+       gap: 6px;
+       color: var(--gray);
+       font-size: 15px;
+       margin-bottom: 8px;
+   }
+   .card-location i { color: var(--primary); }
+   .card-title {
+       font-size: 20px;
+       font-weight: 800;
+       margin-bottom: 12px;
+       color: var(--secondary);
+   }
+   
+   /* ===== تحديث قسم المواصفات في البطاقة ===== */
+   .card-specs {
+       display: flex;
+       gap: 15px;
+       margin-bottom: 20px;
+       flex-wrap: wrap;
+   }
+   .spec-item {
+       flex: 1;
+       text-align: center;
+       padding: 10px;
+       background: var(--light);
+       border-radius: var(--radius-sm);
+       min-width: 60px;
+   }
+   .spec-icon {
+       font-size: 20px;
+       color: var(--primary);
+       margin-bottom: 5px;
+       display: block;
+   }
+   .spec-value {
+       font-size: 16px;
+       font-weight: 700;
+       display: block;
+   }
+   /* ✅ إزالة النص الثابت "AREA" من CSS وسيتم إضافته عبر JS */
+   .spec-label {
+       font-size: 12px;
+       color: var(--gray);
+       display: block;
+       margin-top: 2px;
+   }
+   
+   .card-footer {
+       display: flex;
+       align-items: center;
+       justify-content: space-between;
+       padding-top: 15px;
+       border-top: 1px solid #eee;
+       gap: 12px;
+       flex-wrap: wrap;
+   }
+   
+   .card-price {
+       font-size: 28px;
+       font-weight: 800;
+       color: var(--primary);
+   }
+   
+   .card-price span {
+       font-size: 20px;
+       font-weight: 700;
+   }
+   
+   .card-footer .btn-more {
+       flex-shrink: 0;
+   }
+   
+   /* ===== زر عرض المزيد ===== */
+   .btn-more {
+       background: var(--primary);
+       color: var(--secondary);
+       border: none;
+       padding: 14px 32px;
+       border-radius: 30px;
+       cursor: pointer;
+       font-weight: 700;
+       font-size: 18px;
+       transition: var(--transition);
+       display: inline-flex;
+       align-items: center;
+       gap: 10px;
+       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+       min-width: 140px;
+       justify-content: center;
+   }
+   
+   .btn-more:hover {
+       background: var(--primary-dark);
+       transform: translateY(-3px);
+       box-shadow: var(--shadow-gold);
+   }
+   
+   .btn-more i {
+       font-size: 18px;
+       transition: transform 0.3s ease;
+   }
+   
+   .btn-more:hover i {
+       transform: translateX(-4px);
+   }
+
+   /* ============================================
+   PROPERTIES SECTION
+   ============================================ */
+.properties-section { padding: 30px 0; }
+.section-header {
+    text-align: center;
+    margin-bottom: 25px;
+    margin-top: 25px;
+}
+.section-badge {
+    display: inline-block;
+    background: rgba(201,168,76,0.1);
+    color: var(--primary);
+    padding: 5px 16px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+.section-title {
+    font-size: 40px;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+.section-subtitle {
+    color: var(--gray);
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+.results-info {
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--gray);
+}
+.results-info span:nth-child(2) {
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 22px;
+    margin: 0 5px;
+}
+
+/* Property Grid */
+.properties-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* Property Card */
+.property-card {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: var(--transition);
+    max-width: 100%;
+    height: auto;
+}
+.property-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+}
+.property-card.featured-property {
+    border: 4px solid var(--primary);
+    box-shadow: 0 0 20px rgba(201,168,76,0.3);
+}
+.card-images {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}
+.card-images img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+.property-card:hover .card-images img {
+    transform: scale(1.05);
+}
+
+/* الصورة الافتراضية (الشعار) عندما لا توجد صور */
+.card-images img[src*="king-propertis-logo"],
+.card-images img.default-image {
+    object-fit: contain !important;
+    padding: 10px;
+    background: #f5f5f5;
+    transform: none !important;
+}
+.property-card:hover .card-images img[src*="king-propertis-logo"] {
+    transform: scale(1) !important;
+}
+
+/* كود العقار - يظهر في الأسفل مع المعلومات */
+.card-code {
+    display: inline-block;
+    background: rgba(201,168,76,0.15);
+    color: var(--primary);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 8px;
+    font-weight: 700;
+    border: 1px solid rgba(201,168,76,0.2);
+    letter-spacing: 0.5px;
+}
+.card-badges {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 25;
+}
+.badge-type {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--primary);
+    color: var(--white);
+}
+.featured-badge {
+    position: absolute;
+    top: 15px;
+    left: 3px;
+    background: var(--primary);
+    color: #1a1410;
+    padding: 5px 12px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: bold;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 8px rgba(201,168,76,0.3);
+}
+.card-img-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    z-index: 5;
+}
+.card-img-nav:hover {
+    background: var(--primary);
+    color: white;
+}
+.card-img-nav.prev { left: 10px; }
+.card-img-nav.next { right: 10px; }
+.card-image-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 5;
+}
+.card-image-dots .img-dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 50%;
+    cursor: pointer;
+}
+.card-image-dots .img-dot.active {
+    width: 20px;
+    border-radius: 4px;
+    background: var(--primary);
+}
+.card-body { padding: 20px; }
+.card-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.card-views,
+.card-favs,
+.card-date {
+    font-size: 13px;
+    color: var(--gray);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0,0,0,0.05);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+.card-views i,
+.card-favs i,
+.card-date i { color: var(--primary); }
+.card-favs i { color: #e74c3c; }
+.card-location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gray);
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+.card-location i { color: var(--primary); }
+.card-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    color: var(--secondary);
+}
+
+/* ===== قسم المواصفات في البطاقة ===== */
+.card-specs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.spec-item {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    background: var(--light);
+    border-radius: var(--radius-sm);
+    min-width: 60px;
+}
+.spec-icon {
+    font-size: 20px;
+    color: var(--primary);
+    margin-bottom: 5px;
+    display: block;
+}
+.spec-value {
+    font-size: 16px;
+    font-weight: 700;
+    display: block;
+}
+/* ✅ تم إزالة النص الثابت "AREA" من هنا وسيتم إضافته عبر JavaScript */
+.spec-label {
+    font-size: 12px;
+    color: var(--gray);
+    display: block;
+    margin-top: 2px;
+}
+
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.card-price {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.card-price span {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.card-footer .btn-more {
+    flex-shrink: 0;
+}
+
+/* ===== زر عرض المزيد ===== */
+.btn-more {
+    background: var(--primary);
+    color: var(--secondary);
+    border: none;
+    padding: 14px 32px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 18px;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    min-width: 140px;
+    justify-content: center;
+}
+
+.btn-more:hover {
+    background: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-gold);
+}
+
+.btn-more i {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+.btn-more:hover i {
+    transform: translateX(-4px);
+}
+
+.spec-item {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    background: var(--light);
+    border-radius: var(--radius-sm);
+    min-width: 60px;
+}
+.spec-icon {
+    font-size: 20px;
+    color: var(--primary);
+    margin-bottom: 5px;
+    display: block;
+}
+.spec-value {
+    font-size: 16px;
+    font-weight: 700;
+    display: block;
+}
+/* ✅ هذا هو المهم - التسمية تحت القيمة */
+.spec-label {
+    font-size: 12px;
+    color: var(--gray);
+    display: block;
+    margin-top: 2px;
+}
+
+/* ===== إخفاء أي نص AREA ثابت ===== */
+.spec-item .spec-label:empty {
+    display: none;
+}
+
+/* التأكد من أن التسمية تظهر بشكل صحيح */
+.spec-item .spec-label {
+    font-size: 12px;
+    color: var(--gray);
+    display: block;
+    margin-top: 2px;
+}
+
+/* ============================================
+   PROPERTY DETAIL MODAL - GALLERY
+   ============================================ */
+
+   #galleryMain {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 350px;
+    max-height: 450px;
+    background: #0a0a0a;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+    margin-top: -10px;
+}
+
+.media-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 350px !important;
+    max-height: 450px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #0a0a0a !important;
+    overflow: hidden !important;
+    padding: 10px !important;
+}
+
+.media-wrapper img {
+    width: auto !important;
+    height: auto !important;
+    max-width: 90% !important;
+    max-height: 90% !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: #0a0a0a !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5) !important;
+}
+
+.media-wrapper video {
+    width: 90% !important;
+    height: 90% !important;
+    max-width: 90% !important;
+    max-height: 90% !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: #000 !important;
+    border-radius: 8px !important;
+}
+
+/* ===== أزرار التنقل - تعديل الموقع ===== */
+.gallery-nav {
+    position: absolute !important;
+    top: 50% !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 0 10px !important;
+    z-index: 9999 !important;
+    pointer-events: none !important;
+    width: 100% !important;
+}
+
+/* ✅ أزرار المودال - اتجاه ثابت */
+.gallery-nav-btn {
+    pointer-events: auto !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    color: #ffffff !important;
+    font-size: 22px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(4px) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    user-select: none !important;
+}
+
+/* ✅ تثبيت موقع الأزرار */
+.gallery-nav-btn.prev {
+    margin-right: 5px;
+}
+
+.gallery-nav-btn.next {
+    margin-left: 5px;
+}
+
+/* ✅ أيقونات ثابتة الاتجاه في المودال */
+.gallery-nav-btn .fa-chevron-right,
+.gallery-nav-btn .fa-chevron-left {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gallery-nav-btn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.4) !important;
+    color: #1a1410 !important;
+}
+
+.gallery-nav-btn:active {
+    transform: scale(0.9) !important;
+}
+
+.gallery-nav-btn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.4) !important;
+    color: #1a1410 !important;
+}
+
+/* ===== عداد الصور ===== */
+.image-counter {
+    position: absolute !important;
+    bottom: 15px !important;
+    right: 15px !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: #ffffff !important;
+    padding: 4px 14px !important;
+    border-radius: 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    z-index: 100 !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ===== زر التكبير ===== */
+#zoomBtn {
+    position: absolute !important;
+    bottom: 15px !important;
+    left: 15px !important;
+    z-index: 9999 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    backdrop-filter: blur(4px) !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+#zoomBtn:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.4) !important;
+    color: #1a1410 !important;
+}
+
+/* ============================================
+   RESPONSIVE - GALLERY
+   ============================================ */
+
+   @media (max-width: 768px) {
+    #galleryMain {
+        min-height: 250px !important;
+        max-height: 320px !important;
+        margin-top: -5px;
+    }
+    
+    .media-wrapper {
+        min-height: 250px !important;
+        max-height: 320px !important;
+        padding: 5px !important;
+    }
+    
+    .media-wrapper img {
+        max-width: 95% !important;
+        max-height: 95% !important;
+    }
+    
+    .media-wrapper video {
+        max-width: 95% !important;
+        max-height: 95% !important;
+    }
+    
+    .gallery-nav-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        font-size: 14px !important;
+    }
+    
+    .image-counter {
+        font-size: 11px !important;
+        padding: 3px 10px !important;
+        bottom: 12px !important;
+        right: 12px !important;
+    }
+    
+    #zoomBtn {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 14px !important;
+        bottom: 12px !important;
+        left: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #galleryMain {
+        min-height: 200px !important;
+        max-height: 260px !important;
+        margin-top: 0;
+    }
+    
+    .media-wrapper {
+        min-height: 200px !important;
+        max-height: 260px !important;
+        padding: 5px !important;
+    }
+    
+    .media-wrapper img {
+        max-width: 98% !important;
+        max-height: 98% !important;
+    }
+    
+    .gallery-nav-btn {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        font-size: 12px !important;
+    }
+    
+    .image-counter {
+        font-size: 10px !important;
+        padding: 2px 8px !important;
+        bottom: 8px !important;
+        right: 8px !important;
+    }
+    
+    #zoomBtn {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 12px !important;
+        bottom: 8px !important;
+        left: 8px !important;
+    }
+}
+
+/* ============================================
+   أزرار تقليب الصور - إصلاح اتجاه ثابت
+   ============================================ */
+
+/* ✅ أزرار البطاقات - اتجاه ثابت */
+.card-img-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    z-index: 5;
+    padding: 0;
+    line-height: 1;
+}
+
+/* ✅ اتجاه ثابت بغض النظر عن RTL/LTR */
+.card-img-nav.prev {
+    left: 10px;
+    right: auto;
+}
+
+.card-img-nav.next {
+    right: 10px;
+    left: auto;
+}
+
+.card-img-nav:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* ✅ أيقونات ثابتة الاتجاه */
+.card-img-nav .fa-chevron-right,
+.card-img-nav .fa-chevron-left {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================
+   RESPONSIVE - أزرار تقليب الصور
+   ============================================ */
+
+   @media (max-width: 768px) {
+    .card-img-nav {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 14px !important;
+    }
+    
+    .card-img-nav .fa-chevron-right,
+    .card-img-nav .fa-chevron-left {
+        font-size: 12px !important;
+    }
+    
+    .gallery-nav-btn {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        font-size: 16px !important;
+    }
+    
+    .gallery-nav-btn .fa-chevron-right,
+    .gallery-nav-btn .fa-chevron-left {
+        font-size: 14px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-img-nav {
+        width: 26px !important;
+        height: 26px !important;
+        font-size: 12px !important;
+    }
+    
+    .card-img-nav .fa-chevron-right,
+    .card-img-nav .fa-chevron-left {
+        font-size: 10px !important;
+    }
+    
+    .gallery-nav-btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        font-size: 14px !important;
+    }
+    
+    .gallery-nav-btn .fa-chevron-right,
+    .gallery-nav-btn .fa-chevron-left {
+        font-size: 12px !important;
+    }
+}
+
+/* ============================================
+   أزرار تقليب الصور في البطاقات - اتجاه ثابت
+   ============================================ */
+
+   .card-img-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    z-index: 5;
+    padding: 0;
+    line-height: 1;
+}
+
+/* ✅ تثبيت الموقع - بغض النظر عن RTL/LTR */
+.card-img-nav.prev {
+    left: 10px;
+    right: auto;
+}
+
+.card-img-nav.next {
+    right: 10px;
+    left: auto;
+}
+
+/* ✅ أيقونات ثابتة الاتجاه */
+.card-img-nav i {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-img-nav:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.card-img-nav:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+/* ============================================
+   RESPONSIVE - أزرار البطاقات
+   ============================================ */
+
+@media (max-width: 768px) {
+    .card-img-nav {
+        width: 30px !important;
+        height: 30px !important;
+    }
+    
+    .card-img-nav i {
+        font-size: 13px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-img-nav {
+        width: 26px !important;
+        height: 26px !important;
+    }
+    
+    .card-img-nav i {
+        font-size: 11px !important;
+    }
+}
+
+/* ============================================
+   حالة التحميل (Loading State)
+   ============================================ */
+
+/* تأثير الـ Skeleton Loading */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 40px;
+    height: 30px;
+    color: transparent !important;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* حالة التحميل للأرقام */
+.stat-number-luxury.loading,
+.footer-stat-number.loading {
+    color: transparent !important;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 4px;
+    min-width: 40px;
+    display: inline-block;
+}
+
+/* ✅ إخفاء شاشة التحميل بعد اكتمال البيانات */
+#preloader.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+/* ============================================================
+   SKELETON LOADERS - تأثيرات التحميل
+   ============================================================ */
+
+/* ✅ تأثير التحميل الأساسي */
+.loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%) !important;
+    background-size: 200% 100% !important;
+    animation: skeletonLoading 1.5s ease-in-out infinite !important;
+    border-radius: 4px !important;
+    color: transparent !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    min-width: 40px;
+    display: inline-block;
+}
+
+/* ✅ تأثير التحميل للأرقام الكبيرة */
+.stat-number-luxury.loading {
+    min-width: 60px !important;
+    height: 40px !important;
+    display: inline-block !important;
+}
+
+/* ✅ تأثير التحميل للأرقام الصغيرة */
+.footer-stat-number.loading {
+    min-width: 30px !important;
+    height: 24px !important;
+    display: inline-block !important;
+}
+
+/* ✅ تأثير التحميل لعدد النتائج */
+#resultsCount.loading {
+    min-width: 30px !important;
+    height: 28px !important;
+    display: inline-block !important;
+}
+
+/* ✅ حركة التحميل (الوميض) */
+@keyframes skeletonLoading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ✅ إزالة تأثير التحميل عند اكتمال البيانات */
+.loading.loaded {
+    background: none !important;
+    animation: none !important;
+    color: inherit !important;
+    pointer-events: auto !important;
+    user-select: auto !important;
+}

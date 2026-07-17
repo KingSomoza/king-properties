@@ -7,10 +7,15 @@
 const CONFIG = {
     WHATSAPP: '963932168293',
     ITEMS_PER_PAGE: 6,
-    API_URL: 'https://script.google.com/macros/s/AKfycbwWceDQFxAM4xHNgkkGEcmdpNvVvBy9UoTMNb6tRBSRYthMB--z8aZEdyoREcqosBSc/exec'
+    API_URL: 'https://king-properties-api.king-houses.workers.dev'  // ✅ رابط الـ Worker
 };
 
 const DEFAULT_IMAGE = 'https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png';
+
+// ===== ✅ حالة التحميل (أضف هذا الكود هنا) =====
+let isLoading = true;
+let loadStartTime = Date.now();
+const MIN_LOADING_TIME = 800; // أقل مدة لظهور شاشة التحميل (ملي ثانية)
 
 // ============================================================
 // إعدادات Cloudinary
@@ -20,6 +25,122 @@ const CLOUDINARY_CONFIG = {
     cloudName: 'kingsomoza', // ✅ استبدل بـ Cloud Name الخاص بك
     uploadPreset: 'king_properties' // ✅ استبدل بـ Upload Preset الخاص بك
 };
+
+// ============================================================
+// استخراج الإحداثيات من رابط خرائط جوجل - دعم جميع الصيغ
+// ============================================================
+
+async function extractCoordinatesFromMapLink(mapLink) {
+    if (!mapLink || mapLink.trim() === '') {
+        return { latitude: '', longitude: '', fullLink: mapLink };
+    }
+    
+    const link = mapLink.trim();
+    let lat = '';
+    let lng = '';
+    let finalLink = link;
+    
+    console.log('🔍 محاولة استخراج الإحداثيات من:', link);
+    
+    // ===== 1. محاولة استخراج مباشر من الرابط =====
+    
+    // النمط 1: @33.5138,36.2765 أو /@33.5138,36.2765
+    const atPattern = /[@\/]@?([-+]?\d+\.\d+)\s*[,،]\s*([-+]?\d+\.\d+)/;
+    const atMatch = link.match(atPattern);
+    if (atMatch) {
+        lat = atMatch[1].trim();
+        lng = atMatch[2].trim();
+        console.log(`✅ استخراج من @: ${lat}, ${lng}`);
+        return { latitude: lat, longitude: lng, fullLink: link };
+    }
+    
+    // النمط 2: q=33.5138,36.2765 أو ?q=33.5138,36.2765
+    const qPattern = /[?&]q=([-+]?\d+\.\d+)\s*[,،]\s*([-+]?\d+\.\d+)/;
+    const qMatch = link.match(qPattern);
+    if (qMatch) {
+        lat = qMatch[1].trim();
+        lng = qMatch[2].trim();
+        console.log(`✅ استخراج من q=: ${lat}, ${lng}`);
+        return { latitude: lat, longitude: lng, fullLink: link };
+    }
+    
+    // النمط 3: ll=33.5138,36.2765 أو ?ll=33.5138,36.2765
+    const llPattern = /[?&]ll=([-+]?\d+\.\d+)\s*[,،]\s*([-+]?\d+\.\d+)/;
+    const llMatch = link.match(llPattern);
+    if (llMatch) {
+        lat = llMatch[1].trim();
+        lng = llMatch[2].trim();
+        console.log(`✅ استخراج من ll=: ${lat}, ${lng}`);
+        return { latitude: lat, longitude: lng, fullLink: link };
+    }
+    
+    // النمط 4: إحداثيات في نص الرابط (33.5138,36.2765)
+    const coordPattern = /([-+]?\d+\.\d+)\s*[,،]\s*([-+]?\d+\.\d+)/;
+    const coordMatch = link.match(coordPattern);
+    if (coordMatch) {
+        lat = coordMatch[1].trim();
+        lng = coordMatch[2].trim();
+        console.log(`✅ استخراج إحداثيات مباشرة: ${lat}, ${lng}`);
+        return { latitude: lat, longitude: lng, fullLink: link };
+    }
+    
+    // ===== 2. إذا كان الرابط مختصراً (goo.gl) نحتاج إلى فتحه =====
+    if (link.includes('goo.gl') || link.includes('maps.app.goo.gl')) {
+        console.log('🔗 رابط مختصر، محاولة فتحه للحصول على الإحداثيات...');
+        try {
+            // محاولة جلب الرابط النهائي
+            const response = await fetch(link, {
+                method: 'HEAD',
+                redirect: 'follow'
+            });
+            
+            // الحصول على الرابط النهائي بعد إعادة التوجيه
+            finalLink = response.url;
+            console.log('📎 الرابط النهائي:', finalLink);
+            
+            // محاولة استخراج الإحداثيات من الرابط النهائي
+            const finalCoordPattern = /([-+]?\d+\.\d+)\s*[,،]\s*([-+]?\d+\.\d+)/;
+            const finalMatch = finalLink.match(finalCoordPattern);
+            if (finalMatch) {
+                lat = finalMatch[1].trim();
+                lng = finalMatch[2].trim();
+                console.log(`✅ استخراج من الرابط المختصر: ${lat}, ${lng}`);
+                return { latitude: lat, longitude: lng, fullLink: finalLink };
+            }
+            
+            // محاولة استخراج من @ في الرابط النهائي
+            const finalAtPattern = /@([-+]?\d+\.\d+)\s*[,،]\s*([-+]?\d+\.\d+)/;
+            const finalAtMatch = finalLink.match(finalAtPattern);
+            if (finalAtMatch) {
+                lat = finalAtMatch[1].trim();
+                lng = finalAtMatch[2].trim();
+                console.log(`✅ استخراج من @ في الرابط المختصر: ${lat}, ${lng}`);
+                return { latitude: lat, longitude: lng, fullLink: finalLink };
+            }
+            
+        } catch (error) {
+            console.log('⚠️ فشل فتح الرابط المختصر:', error.message);
+            // نعيد الرابط الأصلي بدون إحداثيات
+            return { latitude: '', longitude: '', fullLink: link };
+        }
+    }
+    
+    // ===== 3. إذا كان الرابط من place/ (مثل place/دمشق) =====
+    if (link.includes('/place/')) {
+        console.log('📍 رابط مكان، محاولة استخراج الإحداثيات من @...');
+        const placePattern = /@([-+]?\d+\.\d+)\s*[,،]\s*([-+]?\d+\.\d+)/;
+        const placeMatch = link.match(placePattern);
+        if (placeMatch) {
+            lat = placeMatch[1].trim();
+            lng = placeMatch[2].trim();
+            console.log(`✅ استخراج من place/: ${lat}, ${lng}`);
+            return { latitude: lat, longitude: lng, fullLink: link };
+        }
+    }
+    
+    console.log('⚠️ لم يتم العثور على إحداثيات في الرابط');
+    return { latitude: '', longitude: '', fullLink: link };
+}
 
 // ============================================================
 // رفع الصور إلى Cloudinary - مع تنظيم المجلدات
@@ -1019,13 +1140,17 @@ function createPropertyCard(p) {
         mediaHtml = `<img class="card-main-img" src="${firstMedia}" alt="${title}" loading="lazy" style="width:100%;height:100%;object-fit:contain;background:#0a0a0a;">`;
     }
     
+    // ✅ بناء البطاقة مع تسميات مترجمة للمواصفات
+    const areaLabel = currentLanguage === 'ar' ? 'المساحة' : 'Area';
+    const m2Unit = currentLanguage === 'ar' ? 'م²' : 'm²';
+    
     return `<div class="property-card ${isFeatured ? 'featured-property' : ''}" data-id="${p.id}" data-images='${JSON.stringify(imagesArray)}' data-current-img="0">
         ${!p.available ? `<div class="sold-overlay"><div class="sold-stamp">${t?.sold_stamp || 'مباع'}</div></div>` : ''}
         ${isFeatured ? `<div class="featured-badge"><i class="fas fa-star"></i> ${t?.featured_badge || 'مميز'}</div>` : ''}
         <div class="card-badges"><span class="badge-type ${p.type === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.type === 'sale' ? `<i class="fas fa-tag"></i> ${t?.filter_transaction_sale || 'للبيع'}` : `<i class="fas fa-key"></i> ${t?.filter_transaction_rent || 'للإيجار'}`}</span></div>
         <div class="card-images" data-id="${p.id}">
             ${mediaHtml}
-            ${imageCount > 1 ? `<button class="card-img-nav prev" data-id="${p.id}">❮</button><button class="card-img-nav next" data-id="${p.id}">❯</button>` : ''}
+            ${imageCount > 1 ? `<button class="card-img-nav prev" data-id="${p.id}"><i class="fas fa-chevron-left"></i></button><button class="card-img-nav next" data-id="${p.id}"><i class="fas fa-chevron-right"></i></button>` : ''}
             ${dotsHtml}
         </div>
         <div class="card-body">
@@ -1038,9 +1163,21 @@ function createPropertyCard(p) {
                <h3 class="card-title">${title}</h3>
             <div class="card-location"><i class="fas fa-map-marker-alt"></i> ${location}</div>
             <div class="card-specs">
-                <div class="spec-item"><i class="fas fa-ruler-combined spec-icon"></i><span class="spec-value">${p.area}</span><span> ${currentLanguage === 'ar' ? 'م²' : 'm²'}</span></div>
-                <div class="spec-item"><i class="fas fa-door-open spec-icon"></i><span class="spec-value">${p.rooms}</span><span>${currentLanguage === 'ar' ? 'غرف' : 'rooms'}</span></div>
-                <div class="spec-item"><i class="fas fa-layer-group spec-icon"></i><span class="spec-value">${getFloorText(p.floor)}</span><span>${currentLanguage === 'ar' ? 'طابق' : 'floor'}</span></div>
+                <div class="spec-item">
+                    <i class="fas fa-ruler-combined spec-icon"></i>
+                    <span class="spec-value">${p.area}</span>
+                    <span class="spec-label">${currentLanguage === 'ar' ? 'م²' : 'm²'}</span>
+                </div>
+                <div class="spec-item">
+                    <i class="fas fa-door-open spec-icon"></i>
+                    <span class="spec-value">${p.rooms}</span>
+                    <span class="spec-label">${currentLanguage === 'ar' ? 'غرف' : 'rooms'}</span>
+                </div>
+                <div class="spec-item">
+                    <i class="fas fa-layer-group spec-icon"></i>
+                    <span class="spec-value">${getFloorText(p.floor)}</span>
+                    <span class="spec-label">${currentLanguage === 'ar' ? 'طابق' : 'floor'}</span>
+                </div>
             </div>
             <div class="card-footer">
                 <div class="card-price">
@@ -1516,44 +1653,33 @@ function dotClickHandler(e) {
 // 7. دوال الإحصائيات - نظام عداد زوار
 // ============================================================
 
+// ===== تهيئة الإحصائيات =====
 async function initStats() {
-    // قراءة العداد من localStorage أولاً
     let visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
     let contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
     
-    // تحديث الواجهة فوراً
     updateStatsUI(visitors, contacts);
     
-    // محاولة جلب أحدث البيانات من الخادم
     try {
-        // جلب عدد الزوار
-        const visitorsRes = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`);
-        const visitorsData = await visitorsRes.json();
-        if (visitorsData && visitorsData.count !== undefined) {
-            visitors = parseInt(visitorsData.count) || 0;
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'getStats' })
+        });
+        const data = await response.json();
+        if (data && data.visitors !== undefined) {
+            visitors = parseInt(data.visitors) || 0;
             localStorage.setItem('kh_visitors_total', visitors);
         }
-    } catch (err) {
-        console.error('❌ فشل جلب الزوار:', err);
-    }
-    
-    try {
-        // جلب عدد الاستفسارات
-        const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
-        const contactsData = await contactsRes.json();
-        if (contactsData && contactsData.count !== undefined) {
-            contacts = parseInt(contactsData.count) || 0;
+        if (data && data.contacts !== undefined) {
+            contacts = parseInt(data.contacts) || 0;
             localStorage.setItem('kh_contacts_total', contacts);
         }
+        updateStatsUI(visitors, contacts);
     } catch (err) {
-        console.error('❌ فشل جلب الاستفسارات:', err);
+        console.log('📊 استخدام البيانات المحلية للإحصائيات');
     }
-    
-    // تحديث الواجهة بالبيانات الجديدة
-    updateStatsUI(visitors, contacts);
-    console.log(`📊 الإحصائيات الأولية: ${visitors} زائر, ${contacts} استفسار`);
 }
-
 // دالة جلب عدد الزوار من الخادم - مع no-cors
 async function fetchVisitorCount() {
     try {
@@ -1588,19 +1714,19 @@ async function incrementVisitorCount() {
     const now = Date.now();
     const lastVisitKey = 'kh_last_visit_time';
     const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
-    const fiveMinutes = 5 * 60 * 1000; // 5 دقائق
+    const fiveMinutes = 5 * 60 * 1000;
     
-    // التحقق من مرور 5 دقائق منذ آخر تسجيل
+    // ✅ السماح بالتسجيل كل 5 دقائق
     if (now - lastVisitTime < fiveMinutes) {
-        console.log(`⏳ لم تمر 5 دقائق بعد، انتظر ${Math.ceil((fiveMinutes - (now - lastVisitTime)) / 1000)} ثانية`);
+        console.log(`⏳ لم تمر 5 دقائق بعد، العدد الحالي: ${localStorage.getItem('kh_visitors_total') || 0}`);
         return false;
     }
     
-    // تحديث وقت الزيارة في localStorage
     localStorage.setItem(lastVisitKey, now.toString());
     
     try {
-        // إرسال طلب زيادة الزوار
+        console.log('📤 محاولة زيادة عدد الزوار...');
+        
         const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1610,46 +1736,63 @@ async function incrementVisitorCount() {
             })
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
         const data = await response.json();
-        console.log('✅ رد الخادم بعد زيادة الزوار:', data);
+        console.log('✅ رد الخادم (زيارة):', data);
         
         if (data && data.count !== undefined) {
             const newCount = parseInt(data.count) || 0;
             localStorage.setItem('kh_visitors_total', newCount);
             const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
             updateStatsUI(newCount, contacts);
-            console.log(`📊 العدد الجديد من الخادم: ${newCount}`);
+            console.log(`📊 عدد الزوار الجديد: ${newCount}`);
             return true;
         } else {
-            // زيادة محلية كحل بديل
+            // ✅ زيادة محلية كحل بديل
             const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
             const newCount = currentCount + 1;
             localStorage.setItem('kh_visitors_total', newCount);
             const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
             updateStatsUI(newCount, contacts);
-            console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
+            console.log(`📊 زيادة محلية: ${newCount}`);
             return true;
         }
     } catch (error) {
-        console.error('❌ خطأ في تحديث عدد الزوار:', error);
-        
-        // زيادة محلية كحل بديل
+        console.error('❌ خطأ في تحديث الزوار:', error);
+        // ✅ زيادة محلية كحل بديل
         const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
         const newCount = currentCount + 1;
         localStorage.setItem('kh_visitors_total', newCount);
         const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
         updateStatsUI(newCount, contacts);
-        console.log(`📊 العدد الجديد (تقديري محلي بعد الخطأ): ${newCount}`);
+        console.log(`📊 زيادة محلية (بديل): ${newCount}`);
         return false;
     }
 }
 
-/// ===== زيادة عدد الاستفسارات =====
+// ===== زيادة عدد الاستفسارات =====
 async function incrementContactsCount() {
+    try {
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'incrementContacts' })
+        });
+        
+        const data = await response.json();
+        if (data && data.count !== undefined) {
+            const contacts = parseInt(data.count) || 0;
+            localStorage.setItem('kh_contacts_total', contacts);
+            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            updateStatsUI(visitors, contacts);
+        }
+    } catch (error) {
+        console.error('❌ خطأ في تحديث الاستفسارات:', error);
+        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        const newContacts = currentContacts + 1;
+        localStorage.setItem('kh_contacts_total', newContacts);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        updateStatsUI(visitors, newContacts);
+    }
     try {
         const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
@@ -1682,12 +1825,16 @@ async function incrementContactsCount() {
     }
 }
 
+// ============================================================
+// 7. دوال الإحصائيات - نظام عداد زوار موحد
+// ============================================================
+
 // ===== تحديث واجهة الإحصائيات =====
 function updateStatsUI(visitors, contacts) {
     const available = allProperties.filter(p => p.available).length;
     const sold = allProperties.filter(p => !p.available).length;
     
-    // تحديث العناصر مع تنسيق الأرقام
+    // تحديث جميع العناصر مع التحقق من وجودها
     const elements = {
         heroAvailable: available,
         heroSold: sold,
@@ -1696,61 +1843,51 @@ function updateStatsUI(visitors, contacts) {
         statsSold: sold,
         statsVisitors: visitors,
         statsContacts: contacts,
-        totalVisitors: visitors,
-        heroAvailableInline: available,
-        heroSoldInline: sold,
-        heroVisitorsInline: visitors
+        resultsCount: allProperties.length
     };
     
     Object.entries(elements).forEach(([id, value]) => {
         const el = document.getElementById(id);
         if (el) {
-            // تنسيق الرقم مع فواصل (مثل 1,234)
+            // ✅ إزالة حالة التحميل
+            el.classList.remove('loading');
+            el.classList.add('loaded');
+            // ✅ عرض الرقم الحقيقي
             el.innerText = Number(value).toLocaleString();
         }
     });
+    
+    // إخفاء شاشة التحميل بعد اكتمال البيانات
+    if (allProperties.length > 0) {
+        hideLoader();
+    }
 }
 
-/// ===== تحديث الإحصائيات التلقائي =====
+// ===== تحديث الإحصائيات التلقائي =====
 async function autoRefreshStats() {
-    console.log('🔄 جاري تحديث الإحصائيات...');
     try {
-        // محاولة جلب عدد الزوار من الخادم
-        try {
-            const visitorsRes = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`);
-            const visitorsData = await visitorsRes.json();
-            if (visitorsData && visitorsData.count !== undefined) {
-                const visitors = parseInt(visitorsData.count) || 0;
-                localStorage.setItem('kh_visitors_total', visitors);
-                console.log(`📊 عدد الزوار من الخادم: ${visitors}`);
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'getStats' })
+        });
+        const data = await response.json();
+        if (data) {
+            if (data.visitors !== undefined) {
+                localStorage.setItem('kh_visitors_total', parseInt(data.visitors) || 0);
             }
-        } catch (err) {
-            console.error('❌ فشل جلب الزوار:', err);
-        }
-        
-        // محاولة جلب عدد الاستفسارات من الخادم
-        try {
-            const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
-            const contactsData = await contactsRes.json();
-            if (contactsData && contactsData.count !== undefined) {
-                const contacts = parseInt(contactsData.count) || 0;
-                localStorage.setItem('kh_contacts_total', contacts);
-                console.log(`📊 عدد الاستفسارات من الخادم: ${contacts}`);
+            if (data.contacts !== undefined) {
+                localStorage.setItem('kh_contacts_total', parseInt(data.contacts) || 0);
             }
-        } catch (err) {
-            console.error('❌ فشل جلب الاستفسارات:', err);
+            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+            updateStatsUI(visitors, contacts);
         }
-        
-        // تحديث الواجهة
+    } catch (error) {
         const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
         const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
         updateStatsUI(visitors, contacts);
-        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر, ${contacts} استفسار`);
-        
-    } catch (error) {
-        console.error('❌ فشل تحديث الإحصائيات:', error);
     }
-    // إعادة الجدولة بعد 30 ثانية
     setTimeout(autoRefreshStats, 30000);
 }
 
@@ -2142,58 +2279,54 @@ async function openPropertyModal(id) {
     const parking = getLocalizedText(p, 'parking');
     const t = translations[currentLanguage];
     
-        // في دالة openPropertyModal
+    // ===== تحديث عنوان العقار =====
+    document.getElementById('propModalTitle').textContent = title;
+    document.getElementById('propModalName').textContent = title;
 
-        // ===== تحديث عنوان العقار =====
-        document.getElementById('propModalTitle').textContent = title;
-        document.getElementById('propModalName').textContent = title;
+    // ===== تحديث كود العقار =====
+    const codeEl = document.getElementById('propModalCode');
+    if (codeEl) {
+        codeEl.innerHTML = `<i class="fas fa-barcode"></i> ${p.id}`;
+    }
 
-        // ===== تحديث كود العقار =====
-        const codeEl = document.getElementById('propModalCode');
-        if (codeEl) {
-            codeEl.innerHTML = `<i class="fas fa-barcode"></i> ${p.id}`;
-        }
+    // ===== تحديث نوع العملية =====
+    const typeEl = document.getElementById('propModalType');
+    if (typeEl) {
+        const typeIcon = p.type === 'sale' ? 'fa-tag' : 'fa-key';
+        const typeText = p.type === 'sale' ? (t?.filter_transaction_sale || 'للبيع') : (t?.filter_transaction_rent || 'للإيجار');
+        typeEl.innerHTML = `<i class="fas ${typeIcon}"></i> ${typeText}`;
+        typeEl.className = `meta-badge type-badge ${p.type === 'sale' ? 'sale' : 'rent'}`;
+    }
 
-        // ===== تحديث نوع العملية =====
-        const typeEl = document.getElementById('propModalType');
-        if (typeEl) {
-            const typeIcon = p.type === 'sale' ? 'fa-tag' : 'fa-key';
-            const typeText = p.type === 'sale' ? (t?.filter_transaction_sale || 'للبيع') : (t?.filter_transaction_rent || 'للإيجار');
-            typeEl.innerHTML = `<i class="fas ${typeIcon}"></i> ${typeText}`;
-            typeEl.className = `meta-badge type-badge ${p.type === 'sale' ? 'sale' : 'rent'}`;
-        }
+    // ===== تحديث الموقع =====
+    const locationEl = document.getElementById('propModalLocation');
+    if (locationEl) {
+        const gov = getLocalizedText(p, 'governorate') || '';
+        const dist = getLocalizedText(p, 'district') || '';
+        const locationText = dist + (dist && gov ? ' - ' : '') + gov;
+        locationEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${locationText || p.location || 'غير محدد'}`;
+    }
 
-        // ===== تحديث الموقع =====
-        const locationEl = document.getElementById('propModalLocation');
-        if (locationEl) {
-            const gov = getLocalizedText(p, 'governorate') || '';
-            const dist = getLocalizedText(p, 'district') || '';
-            const locationText = dist + (dist && gov ? ' - ' : '') + gov;
-            locationEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${locationText || p.location || 'غير محدد'}`;
-        }
+    // ===== تحديث المشاهدات والمفضلات =====
+    const viewsCountEl = document.getElementById('viewsCount');
+    if (viewsCountEl) viewsCountEl.textContent = p.views || 0;
 
-        // ===== تحديث المشاهدات والمفضلات =====
-        const viewsCountEl = document.getElementById('viewsCount');
-        if (viewsCountEl) viewsCountEl.textContent = p.views || 0;
+    const favCountEl = document.getElementById('modalFavCountDisplay');
+    if (favCountEl) favCountEl.textContent = p.favCount || 0;
 
-        const favCountEl = document.getElementById('modalFavCountDisplay');
-        if (favCountEl) favCountEl.textContent = p.favCount || 0;
+    // ===== تحديث الوصف =====
+    document.getElementById('propModalDesc').textContent = description || 'لا يوجد وصف';
 
-        // ===== تحديث الوصف =====
-        document.getElementById('propModalDesc').textContent = description || 'لا يوجد وصف';
-
-    // ✅ تعيين الصور الحالية
+    // ===== تعيين الصور الحالية =====
     currentPropertyImages = p.images || [];
     currentImageIndex = 0;
 
-    // ✅ تنظيف معرض الصور مع الحفاظ على zoomOverlay و zoomBtn وأزرار التنقل والعداد
+    // ===== تنظيف معرض الصور =====
     const galleryMain = document.getElementById('galleryMain');
     if (galleryMain) {
-        // حذف جميع العناصر باستثناء العناصر المهمة
         const children = galleryMain.children;
         for (let i = children.length - 1; i >= 0; i--) {
             const child = children[i];
-            // الاحتفاظ بالعناصر المهمة
             if (child.id === 'zoomOverlay' || 
                 child.id === 'zoomBtn' ||
                 child.classList.contains('gallery-nav') || 
@@ -2203,10 +2336,9 @@ async function openPropertyModal(id) {
             child.remove();
         }
         
-        // ✅ التأكد من وجود zoomOverlay في الصفحة (وليس داخل galleryMain)
+        // التأكد من وجود zoomOverlay
         let zoomOverlay = document.getElementById('zoomOverlay');
         if (!zoomOverlay) {
-            // إذا لم يكن موجوداً، أنشئه في نهاية body
             zoomOverlay = document.createElement('div');
             zoomOverlay.className = 'zoom-overlay';
             zoomOverlay.id = 'zoomOverlay';
@@ -2221,7 +2353,7 @@ async function openPropertyModal(id) {
             document.body.appendChild(zoomOverlay);
         }
         
-        // ✅ التأكد من وجود زر التكبير
+        // التأكد من وجود زر التكبير
         let zoomBtn = document.getElementById('zoomBtn');
         if (!zoomBtn) {
             zoomBtn = document.createElement('button');
@@ -2233,7 +2365,7 @@ async function openPropertyModal(id) {
             galleryMain.insertBefore(zoomBtn, galleryMain.firstChild);
         }
         
-        // ✅ إذا لم توجد أزرار تنقل، أضفها
+        // التأكد من وجود أزرار التنقل
         let galleryNav = galleryMain.querySelector('.gallery-nav');
         if (!galleryNav) {
             galleryNav = document.createElement('div');
@@ -2249,7 +2381,7 @@ async function openPropertyModal(id) {
             galleryMain.appendChild(galleryNav);
         }
         
-        // ✅ إذا لم يوجد عداد، أضفه
+        // التأكد من وجود العداد
         let counter = galleryMain.querySelector('.image-counter');
         if (!counter) {
             counter = document.createElement('div');
@@ -2260,242 +2392,238 @@ async function openPropertyModal(id) {
         }
     }
 
-    // ✅ تحديث الصورة/الفيديو
+    // ===== تحديث الصورة/الفيديو =====
     updateModalImage();
-        
-    // في دالة openPropertyModal، استبدل قسم المواصفات بهذا:
-const specs = document.getElementById('propModalSpecs');
-if (specs) {
-    // تحضير متغيرات السعر
-    let priceDisplay = p.isPriceNumeric ? 
-        `${Number(p.price).toLocaleString()} ${p.currency}` : 
-        p.price;
     
-    // إضافة مدة الإيجار إذا كان العقار للإيجار
-    let rentPeriodText = '';
-    if (p.type === 'rent' && p.rent_period) {
-        const periodMap = {
-            'month': currentLanguage === 'ar' ? 'شهرياً' : 'Monthly',
-            'year': currentLanguage === 'ar' ? 'سنوياً' : 'Yearly',
-            'week': currentLanguage === 'ar' ? 'أسبوعياً' : 'Weekly',
-            'daily': currentLanguage === 'ar' ? 'يومياً' : 'Daily'
-        };
-        rentPeriodText = periodMap[p.rent_period.toLowerCase()] || '';
-    }
-    
-    const priceStyle = p.isPriceNumeric ? 
-        'color:#C9A84C;font-size:28px;font-weight:800;' : 
-        'color:#e74c3c;font-size:24px;font-weight:800;background:rgba(231,76,60,0.1);padding:4px 20px;border-radius:8px;display:inline-block;';
-    
-    const priceBg = p.isPriceNumeric ? 
-        'rgba(201,168,76,0.08)' : 
-        'rgba(231,76,60,0.08)';
-    
-    const priceBorder = p.isPriceNumeric ? 
-        '1px solid rgba(201,168,76,0.2)' : 
-        '1px solid rgba(231,76,60,0.2)';
-    
-    // بناء قائمة المواصفات
-    specs.innerHTML = `
-        <!-- السعر - بارز في الأعلى -->
-        <div class="spec-item-detail price-spec" style="
-            background: ${priceBg};
-            border: ${priceBorder};
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            grid-column: 1 / -1;
-        ">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <i class="fas fa-tag" style="color:${p.isPriceNumeric ? '#C9A84C' : '#e74c3c'}; font-size: 24px;"></i>
-                <span class="spec-label-detail" style="font-size: 16px; color: var(--gray);">${t?.property_specs_price || 'السعر'}</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <span class="spec-value-detail" style="${priceStyle}">${priceDisplay}</span>
-                ${rentPeriodText ? `<span style="font-size: 18px; font-weight: 600; color: var(--gray); background: rgba(0,0,0,0.05); padding: 4px 16px; border-radius: 20px;">${rentPeriodText}</span>` : ''}
-            </div>
-        </div>
+    // ===== المواصفات =====
+    const specs = document.getElementById('propModalSpecs');
+    if (specs) {
+        let priceDisplay = p.isPriceNumeric ? 
+            `${Number(p.price).toLocaleString()} ${p.currency}` : 
+            p.price;
         
-        <!-- باقي المواصفات - كل صف: التسمية في طرف والقيمة في الطرف الآخر -->
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-ruler-combined" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_area || 'المساحة'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.area} م²</span>
-        </div>
+        let rentPeriodText = '';
+        if (p.type === 'rent' && p.rent_period) {
+            const periodMap = {
+                'month': currentLanguage === 'ar' ? 'شهرياً' : 'Monthly',
+                'year': currentLanguage === 'ar' ? 'سنوياً' : 'Yearly',
+                'week': currentLanguage === 'ar' ? 'أسبوعياً' : 'Weekly',
+                'daily': currentLanguage === 'ar' ? 'يومياً' : 'Daily'
+            };
+            rentPeriodText = periodMap[p.rent_period.toLowerCase()] || '';
+        }
         
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-door-open" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_rooms || 'الغرف'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span>
-        </div>
+        const priceStyle = p.isPriceNumeric ? 
+            'color:#C9A84C;font-size:28px;font-weight:800;' : 
+            'color:#e74c3c;font-size:24px;font-weight:800;background:rgba(231,76,60,0.1);padding:4px 20px;border-radius:8px;display:inline-block;';
         
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-bath" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_bathrooms || 'الحمامات'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.bathrooms || '—'}</span>
-        </div>
+        const priceBg = p.isPriceNumeric ? 
+            'rgba(201,168,76,0.08)' : 
+            'rgba(231,76,60,0.08)';
         
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-layer-group" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_floor || 'الطابق'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getFloorText(p.floor)}</span>
-        </div>
+        const priceBorder = p.isPriceNumeric ? 
+            '1px solid rgba(201,168,76,0.2)' : 
+            '1px solid rgba(231,76,60,0.2)';
         
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-arrow-up" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_elevator || 'مصعد'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'elevator')}</span>
-        </div>
-        
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-compass" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_direction || 'الاتجاه'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'direction')}</span>
-        </div>
-        
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-paint-brush" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_finishing || 'التشطيب'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'finishing')}</span>
-        </div>
-        
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-car" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_parking || 'موقف السيارة'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'parking')}</span>
-        </div>
-        
-        <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
-            <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-file-contract" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_ownership || 'سند الملكية'}
-            </span>
-            <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'ownership')}</span>
-        </div>
-    `;
-}
-    
-// ===== الخريطة - تظهر تلقائياً مع تفاعل كامل =====
-const mapDiv = document.getElementById('propModalMap');
-if (mapDiv) {
-    const hasValidCoordinates = p.lat && p.lng && p.lat !== 0 && p.lng !== 0;
-    
-    if (hasValidCoordinates) {
-        const lat = p.lat;
-        const lng = p.lng;
-        
-        // استخدام iframe مع خيارات تفاعلية كاملة
-        const mapUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed&hl=${currentLanguage === 'ar' ? 'ar' : 'en'}`;
-        
-        mapDiv.innerHTML = `
-            <div class="map-wrapper-interactive">
-                <div class="map-container-interactive">
-                    <iframe 
-                        src="${mapUrl}"
-                        width="100%" 
-                        height="100%" 
-                        style="border:0;"
-                        loading="lazy"
-                        allowfullscreen
-                        referrerpolicy="no-referrer-when-downgrade"
-                        title="موقع العقار على الخريطة">
-                    </iframe>
-                    <!-- زر فتح في خرائط جوجل - أعلى اليسار -->
-                    <button onclick="window.open('https://www.google.com/maps?q=${lat},${lng}', '_blank')" 
-                            class="map-open-btn-top-left">
-                        <i class="fas fa-external-link-alt"></i> 
-                        <span>${currentLanguage === 'ar' ? 'فتح في خرائط جوجل' : 'Open in Google Maps'}</span>
-                    </button>
+        specs.innerHTML = `
+            <div class="spec-item-detail price-spec" style="
+                background: ${priceBg};
+                border: ${priceBorder};
+                border-radius: 12px;
+                padding: 16px 20px;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 10px;
+                grid-column: 1 / -1;
+            ">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-tag" style="color:${p.isPriceNumeric ? '#C9A84C' : '#e74c3c'}; font-size: 24px;"></i>
+                    <span class="spec-label-detail" style="font-size: 16px; color: var(--gray);">${t?.property_specs_price || 'السعر'}</span>
                 </div>
-                <div class="map-info-bar">
-                    <div class="map-coordinates-interactive">
-                        <i class="fas fa-crosshairs"></i>
-                        <span>${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
-                    </div>
-                    <div class="map-zoom-hint">
-                        <i class="fas fa-mouse-pointer"></i>
-                        <span>${currentLanguage === 'ar' ? 'اسحب للتنقل • درّج للتكبير' : 'Drag to navigate • Scroll to zoom'}</span>
-                    </div>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span class="spec-value-detail" style="${priceStyle}">${priceDisplay}</span>
+                    ${rentPeriodText ? `<span style="font-size: 18px; font-weight: 600; color: var(--gray); background: rgba(0,0,0,0.05); padding: 4px 16px; border-radius: 20px;">${rentPeriodText}</span>` : ''}
                 </div>
             </div>
-        `;
-    } else {
-        mapDiv.innerHTML = `
-            <div class="map-placeholder-interactive">
-                <div class="map-placeholder-icon-interactive">
-                    <i class="fas fa-map-pin"></i>
-                </div>
-                <h4>${currentLanguage === 'ar' ? '📍 لم يتم تحديد الموقع' : '📍 Location Not Set'}</h4>
-                <p>${currentLanguage === 'ar' ? 'يمكنك التواصل معنا للحصول على الموقع الدقيق' : 'Contact us for the exact location'}</p>
-                <button onclick="openContactModal('${p.id}')" class="map-contact-btn-interactive">
-                    <i class="fas fa-phone-alt"></i>
-                    <span>${currentLanguage === 'ar' ? 'طلب الموقع' : 'Request Location'}</span>
-                </button>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-ruler-combined" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_area || 'المساحة'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.area} م²</span>
+            </div>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-door-open" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_rooms || 'الغرف'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span>
+            </div>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-bath" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_bathrooms || 'الحمامات'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${p.bathrooms || '—'}</span>
+            </div>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-layer-group" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_floor || 'الطابق'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getFloorText(p.floor)}</span>
+            </div>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-arrow-up" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_elevator || 'مصعد'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'elevator')}</span>
+            </div>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-compass" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_direction || 'الاتجاه'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'direction')}</span>
+            </div>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-paint-brush" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_finishing || 'التشطيب'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'finishing')}</span>
+            </div>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-car" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_parking || 'موقف السيارة'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'parking')}</span>
+            </div>
+            
+            <div class="spec-item-detail" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--light); border-radius: 10px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+                <span class="spec-label-detail" style="font-size: 14px; color: var(--gray); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-file-contract" style="color: var(--primary); width: 20px;"></i> ${t?.property_specs_ownership || 'سند الملكية'}
+                </span>
+                <span class="spec-value-detail" style="font-size: 16px; font-weight: 600;">${getLocalizedText(p, 'ownership')}</span>
             </div>
         `;
     }
-}
     
-    // ===== عقارات مشابهة (مع صورة + اسم + موقع + سعر) =====
-let similar = allProperties.filter(x => x.id !== id && x.type === p.type && x.available && Math.abs(x.price - p.price) <= (p.price * 0.3));
-if (similar.length < 3) {
-    similar = [...similar, ...allProperties.filter(x => x.id !== id && x.type === p.type && x.available && !similar.includes(x))].slice(0, 4);
-}
-
-const suggDiv = document.getElementById('propSuggestions');
-if (suggDiv) {
-    if (similar.length > 0) {
-        suggDiv.innerHTML = similar.map(s => {
-            // الحصول على أول صورة
-            let firstImage = DEFAULT_IMAGE;
-            if (s.images && Array.isArray(s.images) && s.images.length > 0) {
-                firstImage = s.images[0];
-            } else if (s.images && typeof s.images === 'string') {
-                const imagesArray = s.images.split(',').map(img => img.trim());
-                if (imagesArray.length > 0) {
-                    firstImage = imagesArray[0];
-                }
-            }
+    // ===== الخريطة =====
+    const mapDiv = document.getElementById('propModalMap');
+    if (mapDiv) {
+        const hasValidCoordinates = p.lat && p.lng && p.lat !== 0 && p.lng !== 0;
+        
+        if (hasValidCoordinates) {
+            const lat = p.lat;
+            const lng = p.lng;
+            const mapUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed&hl=${currentLanguage === 'ar' ? 'ar' : 'en'}`;
             
-            const sTitle = getLocalizedText(s, 'title');
-            const sLocation = getLocalizedText(s, 'district') + (getLocalizedText(s, 'city') ? ' - ' + getLocalizedText(s, 'city') : '');
-            const sPrice = s.isPriceNumeric ? 
-                `${Number(s.price).toLocaleString()} ${s.currency}` : 
-                s.price;
-            
-            return `
-                <div class="suggestion-card-luxury" onclick="openPropertyModal('${s.id}')">
-                    <div class="suggestion-image">
-                        <img src="${firstImage}" alt="${sTitle}" loading="lazy">
+            mapDiv.innerHTML = `
+                <div class="map-wrapper-interactive">
+                    <div class="map-container-interactive">
+                        <iframe 
+                            src="${mapUrl}"
+                            width="100%" 
+                            height="100%" 
+                            style="border:0;"
+                            loading="lazy"
+                            allowfullscreen
+                            referrerpolicy="no-referrer-when-downgrade"
+                            title="موقع العقار على الخريطة">
+                        </iframe>
+                        <button onclick="window.open('https://www.google.com/maps?q=${lat},${lng}', '_blank')" 
+                                class="map-open-btn-top-left">
+                            <i class="fas fa-external-link-alt"></i> 
+                            <span>${currentLanguage === 'ar' ? 'فتح في خرائط جوجل' : 'Open in Google Maps'}</span>
+                        </button>
                     </div>
-                    <div class="suggestion-info">
-                        <div class="s-title">${sTitle}</div>
-                        <div class="s-location"><i class="fas fa-map-marker-alt"></i> ${sLocation}</div>
-                        <div class="s-price">${sPrice}</div>
+                    <div class="map-info-bar">
+                        <div class="map-coordinates-interactive">
+                            <i class="fas fa-crosshairs"></i>
+                            <span>${lat.toFixed(6)}, ${lng.toFixed(6)}</span>
+                        </div>
+                        <div class="map-zoom-hint">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <span>${currentLanguage === 'ar' ? 'اسحب للتنقل • درّج للتكبير' : 'Drag to navigate • Scroll to zoom'}</span>
+                        </div>
                     </div>
                 </div>
             `;
-        }).join('');
-    } else {
-        suggDiv.innerHTML = `<div class="no-similar">${t?.property_no_similar || 'لا توجد عقارات مشابهة'}</div>`;
+        } else {
+            mapDiv.innerHTML = `
+                <div class="map-placeholder-interactive">
+                    <div class="map-placeholder-icon-interactive">
+                        <i class="fas fa-map-pin"></i>
+                    </div>
+                    <h4>${currentLanguage === 'ar' ? '📍 لم يتم تحديد الموقع' : '📍 Location Not Set'}</h4>
+                    <p>${currentLanguage === 'ar' ? 'يمكنك التواصل معنا للحصول على الموقع الدقيق' : 'Contact us for the exact location'}</p>
+                    <button onclick="openContactModal('${p.id}')" class="map-contact-btn-interactive">
+                        <i class="fas fa-phone-alt"></i>
+                        <span>${currentLanguage === 'ar' ? 'طلب الموقع' : 'Request Location'}</span>
+                    </button>
+                </div>
+            `;
+        }
     }
-}
     
+    // ===== عقارات مشابهة =====
+    let similar = allProperties.filter(x => x.id !== id && x.type === p.type && x.available && Math.abs(x.price - p.price) <= (p.price * 0.3));
+    if (similar.length < 3) {
+        similar = [...similar, ...allProperties.filter(x => x.id !== id && x.type === p.type && x.available && !similar.includes(x))].slice(0, 4);
+    }
+
+    const suggDiv = document.getElementById('propSuggestions');
+    if (suggDiv) {
+        if (similar.length > 0) {
+            suggDiv.innerHTML = similar.map(s => {
+                let firstImage = DEFAULT_IMAGE;
+                if (s.images && Array.isArray(s.images) && s.images.length > 0) {
+                    firstImage = s.images[0];
+                } else if (s.images && typeof s.images === 'string') {
+                    const imagesArray = s.images.split(',').map(img => img.trim());
+                    if (imagesArray.length > 0) {
+                        firstImage = imagesArray[0];
+                    }
+                }
+                
+                const sTitle = getLocalizedText(s, 'title');
+                const sLocation = getLocalizedText(s, 'district') + (getLocalizedText(s, 'city') ? ' - ' + getLocalizedText(s, 'city') : '');
+                const sPrice = s.isPriceNumeric ? 
+                    `${Number(s.price).toLocaleString()} ${s.currency}` : 
+                    s.price;
+                
+                return `
+                    <div class="suggestion-card-luxury" onclick="openPropertyModal('${s.id}')">
+                        <div class="suggestion-image">
+                            <img src="${firstImage}" alt="${sTitle}" loading="lazy">
+                        </div>
+                        <div class="suggestion-info">
+                            <div class="s-title">${sTitle}</div>
+                            <div class="s-location"><i class="fas fa-map-marker-alt"></i> ${sLocation}</div>
+                            <div class="s-price">${sPrice}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            suggDiv.innerHTML = `<div class="no-similar">${t?.property_no_similar || 'لا توجد عقارات مشابهة'}</div>`;
+        }
+    }
+    
+    // ===== فتح المودال وتحديث الرابط =====
     document.getElementById('propertyModal').classList.add('active');
     document.body.style.overflow = 'hidden';
-    history.pushState({}, '', `${window.location.pathname}?id=${id}`);
+    
+    // ✅ تحديث الرابط (يظهر معرف العقار في عنوان URL)
+    const url = new URL(window.location);
+    url.searchParams.set('id', id);
+    window.history.pushState({ propertyId: id }, '', url.toString());
 }
 
 function updateModalImage() {
@@ -2759,6 +2887,15 @@ function prevPropImg() {
 function closePropertyModal() {
     document.getElementById('propertyModal').classList.remove('active');
     document.body.style.overflow = '';
+    
+    // ✅ إزالة معرف العقار من الرابط (العودة إلى الصفحة الرئيسية)
+    const url = new URL(window.location);
+    if (url.searchParams.has('id') || url.searchParams.has('property')) {
+        url.searchParams.delete('id');
+        url.searchParams.delete('property');
+        // استخدام replaceState بدلاً من pushState لتجنب إضافة إدخال جديد في history
+        window.history.replaceState({}, '', url.pathname);
+    }
 }
 
 
@@ -3246,16 +3383,25 @@ function loadPrivacyConsent() {
 }
 
 // ============================================================
-// 17. دوال التحميل والتشغيل
+// جلب البيانات من Google Sheets
 // ============================================================
 
-// جلب البيانات من Google Sheets
 async function loadProperties() {
+    // ✅ إظهار حالة التحميل
+    isLoading = true;
     showToast('جاري تحميل العقارات...', 'info');
+    
     try {
-        const response = await fetch(CONFIG.API_URL);
-        const data = await response.json();
-        console.log(`📊 تم استلام ${data ? data.length : 0} عقار من الخادم`);
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getProperties' })
+        });
+        const result = await response.json();
+        
+        // ✅ قراءة البيانات من result.properties
+        const data = result.properties || [];
+        console.log(`📊 تم استلام ${data.length} عقار من الخادم`);
         
         if (data && data.length > 0) {
             allProperties = data.map(row => {
@@ -3320,19 +3466,16 @@ async function loadProperties() {
 
             console.log('📊 تم تحميل العقارات:');
             allProperties.forEach(p => {
-                console.log(`${p.id}: price=${p.price}, isPriceNumeric=${p.isPriceNumeric}, type=${p.type}`);
+                console.log(`${p.id}: ${p.title_ar} - ${p.type}`);
             });
             
             // ترتيب العقارات: المميزة أولاً، ثم حسب تاريخ الإضافة (الأجدد أولاً)
             allProperties.sort((a, b) => {
-                // أولاً: العقارات المميزة تظهر في الأعلى
                 if (a.featured === 'yes' && b.featured !== 'yes') return -1;
                 if (a.featured !== 'yes' && b.featured === 'yes') return 1;
-                
-                // ثانياً: ترتيب حسب تاريخ الإضافة (الأجدد أولاً)
                 const dateA = a.added_date ? new Date(a.added_date).getTime() : 0;
                 const dateB = b.added_date ? new Date(b.added_date).getTime() : 0;
-                return dateB - dateA; // الأحدث أولاً
+                return dateB - dateA;
             });
             
             localStorage.setItem('kh_properties', JSON.stringify(allProperties));
@@ -3342,8 +3485,20 @@ async function loadProperties() {
             console.log(`✅ تم تحميل ${allProperties.length} عقار (${availableCount} متاح, ${soldCount} مباع)`);
             showToast(`✅ تم تحميل ${allProperties.length} عقار`, 'success');
             
-            // ✅ تسجيل زائر جديد (بعد تحميل العقارات)
+            // ✅ تسجيل زائر جديد
             incrementVisitorCount();
+            
+            // ✅ إزالة حالة التحميل من جميع العناصر
+            document.querySelectorAll('.loading').forEach(el => {
+                el.classList.remove('loading');
+                el.classList.add('loaded');
+            });
+            
+            // ✅ تحديث الإحصائيات
+            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+            updateStatsUI(visitors, contacts);
+            
         } else {
             throw new Error('لا توجد بيانات');
         }
@@ -3366,6 +3521,9 @@ async function loadProperties() {
     }
     updatePageTexts(); 
     forceHideLoader();
+    
+    // ✅ إخفاء شاشة التحميل الكاملة
+    isLoading = false;
 }
 
 // تحديث البيانات (مع مهلة 5 دقائق)
@@ -3482,6 +3640,7 @@ async function refreshProperties() {
             renderProperties();
             updateResultsCount();
             await initStats();
+            await incrementVisitorCount();
             updatePageTexts();
             
             const availableCount = allProperties.filter(p => p.available).length;
@@ -3550,30 +3709,36 @@ function getPropertyIdFromURL() {
 }
 
 function autoOpenPropertyFromURL() {
-    const propertyId = getPropertyIdFromURL();
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get('id') || urlParams.get('property');
+    
     if (propertyId) {
+        // تأخير لضمان تحميل العقارات
         setTimeout(() => {
             const property = allProperties.find(p => p.id === propertyId);
             if (property) {
                 openPropertyModal(propertyId);
                 showToast(`🔗 تم فتح العقار: ${getLocalizedText(property, 'title')}`, 'success');
             } else {
-                history.pushState({}, '', window.location.pathname);
+                // إذا لم يتم العثور على العقار، إزالة المعرف من الرابط
+                const url = new URL(window.location);
+                url.searchParams.delete('id');
+                url.searchParams.delete('property');
+                window.history.replaceState({}, '', url.pathname);
             }
         }, 500);
     }
 }
 
+// ===== إخفاء شاشة التحميل =====
 function hideLoader() {
     const loader = document.getElementById('preloader');
-    if (!loader) return;
-    setTimeout(() => {
+    if (loader) {
         loader.classList.add('fade-out');
         setTimeout(() => {
             loader.style.display = 'none';
-            console.log('✅ تم إخفاء شاشة التحميل');
         }, 500);
-    }, 300);
+    }
 }
 
 function forceHideLoader() {
@@ -3609,6 +3774,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     hideLoader();
     setTimeout(forceHideLoader, 3000);
 });
+
+// ===== معالجة زر الرجوع في المتصفح =====
+window.addEventListener('popstate', function(event) {
+    // التحقق من وجود مودال العقار مفتوح
+    const modal = document.getElementById('propertyModal');
+    if (modal && modal.classList.contains('active')) {
+        // إذا كان المودال مفتوحاً، أغلقه
+        closePropertyModal();
+    }
+    
+    // التحقق من وجود معرف عقار في الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get('id') || urlParams.get('property');
+    
+    if (!propertyId) {
+        // إذا لم يوجد معرف عقار، تأكد من إغلاق المودال
+        if (modal && modal.classList.contains('active')) {
+            closePropertyModal();
+        }
+    }
+});
+
+// ===== عند تحميل الصفحة، التحقق من وجود معرف عقار في الرابط =====
+function checkPropertyInURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get('id') || urlParams.get('property');
+    
+    if (propertyId) {
+        // البحث عن العقار وفتحه
+        const property = allProperties.find(p => p.id === propertyId);
+        if (property) {
+            // تأخير صغير لضمان تحميل الصفحة
+            setTimeout(() => {
+                openPropertyModal(propertyId);
+            }, 300);
+        } else {
+            // إذا لم يتم العثور على العقار، إزالة المعرف من الرابط
+            const url = new URL(window.location);
+            url.searchParams.delete('id');
+            url.searchParams.delete('property');
+            window.history.replaceState({}, '', url.pathname);
+        }
+    }
+}
+
+// استدعاء الدالة بعد تحميل العقارات
+// أضف هذا السطر في نهاية دالة loadProperties بعد تحميل العقارات:
+// checkPropertyInURL();
 
 // ============================================================
 // نسخ رقم واتساب بعد تسجيل العميل
@@ -3833,6 +4046,10 @@ async function submitAddProperty(event) {
         images: document.getElementById('propertyImages')?.value || '',
         mapLink: document.getElementById('propertyMap')?.value?.trim() || ''
     };
+    
+    // ✅ استخراج الإحداثيات من رابط الخريطة (مع await)
+    const coordinates = await extractCoordinatesFromMapLink(fields.mapLink);
+    console.log('📍 الإحداثيات المستخرجة:', coordinates);
 
     console.log('📋 القيم المدخلة:', fields);
 
@@ -3963,13 +4180,15 @@ async function submitAddProperty(event) {
                 propertyArea: fields.area,
                 governorate: fields.governorate,
                 district: fields.district,
-                ownership: fields.ownership,
+                ownership: fields.ownership,        // ✅ نوع الملكية
+                finishing: fields.finishing,        // ✅ نوع الإكساء
                 rooms: fields.rooms || 'غير محدد',
                 bathrooms: fields.bathrooms || 'غير محدد',
-                finishing: fields.finishing || 'غير محدد',
                 description: fields.description || 'لا يوجد',
                 images: fields.images || 'لا توجد',
-                mapLink: fields.mapLink || 'لا يوجد',
+                mapLink: coordinates.fullLink || fields.mapLink || 'لا يوجد',  // ✅ الرابط الكامل
+                latitude: coordinates.latitude || '',                          // ✅ خط العرض
+                longitude: coordinates.longitude || '',                        // ✅ خط الطول
                 commission: '2%',
                 timestamp: new Date().toISOString()
             })
@@ -4070,6 +4289,136 @@ function copyContactPhone() {
         document.body.removeChild(textarea);
     });
 }
+
+// ===== دالة إضافية لترجمة أسماء المحافظات في نموذج الإضافة =====
+function translateGovernorates() {
+    const governorateSelect = document.getElementById('propertyGovernorate');
+    if (!governorateSelect) return;
+    
+    const lang = currentLanguage;
+    
+    const governorates = {
+        'دمشق': { ar: 'دمشق', en: 'Damascus' },
+        'حلب': { ar: 'حلب', en: 'Aleppo' },
+        'حمص': { ar: 'حمص', en: 'Homs' },
+        'اللاذقية': { ar: 'اللاذقية', en: 'Latakia' },
+        'طرطوس': { ar: 'طرطوس', en: 'Tartus' },
+        'حماة': { ar: 'حماة', en: 'Hama' },
+        'دير الزور': { ar: 'دير الزور', en: 'Deir ez-Zor' },
+        'الحسكة': { ar: 'الحسكة', en: 'Al-Hasakah' },
+        'الرقة': { ar: 'الرقة', en: 'Ar-Raqqah' },
+        'إدلب': { ar: 'إدلب', en: 'Idlib' },
+        'درعا': { ar: 'درعا', en: 'Daraa' },
+        'السويداء': { ar: 'السويداء', en: 'As-Suwayda' },
+        'القنيطرة': { ar: 'القنيطرة', en: 'Quneitra' }
+    };
+    
+    for (let i = 0; i < governorateSelect.options.length; i++) {
+        const option = governorateSelect.options[i];
+        const value = option.value;
+        
+        if (!value) {
+            option.textContent = lang === 'ar' ? 'اختر المحافظة' : 'Select Governorate';
+            continue;
+        }
+        
+        if (governorates[value]) {
+            option.textContent = lang === 'ar' ? governorates[value].ar : governorates[value].en;
+        }
+    }
+}
+
+// ===== ترجمة أسماء المحافظات في الفلتر =====
+function translateFilterGovernorates() {
+    const govSelect = document.getElementById('filterGovernorate');
+    if (!govSelect) return;
+    
+    const lang = currentLanguage;
+    
+    const governorates = {
+        'دمشق': { ar: 'دمشق', en: 'Damascus' },
+        'حلب': { ar: 'حلب', en: 'Aleppo' },
+        'حمص': { ar: 'حمص', en: 'Homs' },
+        'اللاذقية': { ar: 'اللاذقية', en: 'Latakia' },
+        'طرطوس': { ar: 'طرطوس', en: 'Tartus' },
+        'حماة': { ar: 'حماة', en: 'Hama' },
+        'دير الزور': { ar: 'دير الزور', en: 'Deir ez-Zor' },
+        'الحسكة': { ar: 'الحسكة', en: 'Al-Hasakah' },
+        'الرقة': { ar: 'الرقة', en: 'Ar-Raqqah' },
+        'إدلب': { ar: 'إدلب', en: 'Idlib' },
+        'درعا': { ar: 'درعا', en: 'Daraa' },
+        'السويداء': { ar: 'السويداء', en: 'As-Suwayda' },
+        'القنيطرة': { ar: 'القنيطرة', en: 'Quneitra' }
+    };
+    
+    for (let i = 0; i < govSelect.options.length; i++) {
+        const option = govSelect.options[i];
+        const value = option.value;
+        
+        if (!value) {
+            option.textContent = lang === 'ar' ? 'كل المحافظات' : 'All Governorates';
+            continue;
+        }
+        
+        if (governorates[value]) {
+            option.textContent = lang === 'ar' ? governorates[value].ar : governorates[value].en;
+        }
+    }
+}
+
+// ===== تعديل دالة refreshAllFilters لتشمل ترجمة المحافظات =====
+// نضيف استدعاء translateFilterGovernorates في نهاية الدالة
+// نقوم بتعديل الدالة الأصلية
+
+// ===== حفظ الدالة الأصلية للاستخدام =====
+const originalRefreshAllFilters = window.refreshAllFilters || function() {};
+
+// إعادة تعريف الدالة
+refreshAllFilters = function() {
+    // استدعاء الدالة الأصلية
+    if (typeof originalRefreshAllFilters === 'function') {
+        originalRefreshAllFilters();
+    }
+    
+    // ترجمة أسماء المحافظات في الفلتر
+    translateFilterGovernorates();
+    
+    // ترجمة أسماء المحافظات في نموذج الإضافة
+    translateGovernorates();
+    
+    console.log('✅ تم ترجمة المحافظات للغة:', currentLanguage);
+};
+
+// ===== تعديل دالة setLanguage لتضمين ترجمة المحافظات =====
+// حفظ الدالة الأصلية
+const originalSetLanguage = window.setLanguage || function() {};
+
+// إعادة تعريف الدالة
+setLanguage = function(lang) {
+    // استدعاء الدالة الأصلية
+    if (typeof originalSetLanguage === 'function') {
+        originalSetLanguage(lang);
+    }
+    
+    // ترجمة المحافظات بعد تغيير اللغة
+    setTimeout(() => {
+        translateFilterGovernorates();
+        translateGovernorates();
+        
+        // إعادة عرض العقارات لتحديث التسميات
+        if (filteredProperties.length > 0) {
+            renderProperties();
+        }
+    }, 100);
+};
+
+// ===== عند تحميل الصفحة، ترجمة المحافظات =====
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        translateFilterGovernorates();
+        translateGovernorates();
+    }, 500);
+});
 
 window.filterProperties = filterProperties;
 window.resetFilters = resetFilters;

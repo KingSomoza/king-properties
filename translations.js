@@ -73,7 +73,6 @@ const translations = {
         btn_hide_sold: "إخفاء المباعة",
         btn_show_all: "إظهار الكل",
         
-        
         // ---------- قسم العقارات ----------
         section_badge: "أحدث العقارات",
         section_title: "عقارات",
@@ -261,16 +260,9 @@ const translations = {
         add_property_district_label: "المنطقة",
         add_property_district_placeholder: "مثال: المهاجرين",
         add_property_ownership_label: "نوع الملكية",
-        add_property_ownership_placeholder: "اختر نوع الملكية",
-        add_property_ownership_owned: "طابو أخضر",
-        add_property_ownership_shared: "مشاع (أسهم)",
-        add_property_ownership_court: "حكم محكمة",
-        add_property_finishing_label: "نوع التشطيب",
-        add_property_finishing_placeholder: "اختر نوع التشطيب",
-        add_property_finishing_luxury: "فاخر",
-        add_property_finishing_good: "جيد",
-        add_property_finishing_normal: "عادي",
-        add_property_finishing_unfinished: "غير مكتمل",
+        add_property_ownership_placeholder: "أدخل نوع الملكية (مثال: طابو أخضر)",
+        add_property_finishing_label: "نوع الإكساء",
+        add_property_finishing_placeholder: "أدخل نوع الإكساء (مثال: فاخر / جيد / عادي)",
         add_property_drop_zone: "اسحب الصور هنا أو اضغط للاختيار",
         add_property_select_images: "اختر الصور",
         add_property_map_label: "رابط الموقع على الخريطة (اختياري)",
@@ -279,11 +271,25 @@ const translations = {
         add_property_commission: "💰 نسبة العمولة هي 2%",
         add_property_finishing_shell: "على العضم",
         
-        
         // ---------- أخطاء وأخرى ----------
         error_loading: "لا توجد بيانات، يرجى إضافة عقارات",
         error_api: "فشل الاتصال بالخادم",
-        unknown: "غير محدد"
+        unknown: "غير محدد",
+        
+        // ---------- أسماء المحافظات (لنموذج الإضافة والفلتر) ----------
+        governorate_damascus: "دمشق",
+        governorate_aleppo: "حلب",
+        governorate_homs: "حمص",
+        governorate_latakia: "اللاذقية",
+        governorate_tartus: "طرطوس",
+        governorate_hama: "حماة",
+        governorate_deir_ez_zor: "دير الزور",
+        governorate_hasakah: "الحسكة",
+        governorate_raqqa: "الرقة",
+        governorate_idlib: "إدلب",
+        governorate_daraa: "درعا",
+        governorate_suwayda: "السويداء",
+        governorate_quneitra: "القنيطرة"
     },
     
     en: {
@@ -322,16 +328,16 @@ const translations = {
         filters_toggle_hide: "Hide Filters",
         filter_transaction_type: "Transaction Type",
         filter_transaction_all: "All",
-        filter_transaction_sale: "🏷️ For Sale",
-        filter_transaction_rent: "🔑 For Rent",
+        filter_transaction_sale: "For Sale",
+        filter_transaction_rent: "For Rent",
         filter_property_type: "Property Type",
         filter_property_all: "All",
-        filter_property_apartment: "🏢 Apartment",
-        filter_property_house: "🏠 House",
-        filter_property_villa: "🏰 Villa",
-        filter_property_shop: "🏪 Shop",
-        filter_property_building: "🏗️ Whole Building",
-        filter_property_land: "🌾 Land",
+        filter_property_apartment: "Apartment",
+        filter_property_house: "House",
+        filter_property_villa: "Villa",
+        filter_property_shop: "Shop",
+        filter_property_building: "Whole Building",
+        filter_property_land: "Land",
         filter_governorate: "Governorate",
         filter_governorate_all: "All Governorates",
         filter_district: "District",
@@ -544,27 +550,35 @@ const translations = {
         add_property_district_label: "District",
         add_property_district_placeholder: "Example: Muhajireen",
         add_property_ownership_label: "Ownership Type",
-        add_property_ownership_placeholder: "Select ownership type",
-        add_property_ownership_owned: "Green Title Deed",
-        add_property_ownership_shared: "Shared (Shares)",
-        add_property_ownership_court: "Court Ruling",
+        add_property_ownership_placeholder: "Enter ownership type (e.g. Green Title Deed)",
         add_property_finishing_label: "Finishing Type",
-        add_property_finishing_placeholder: "Select finishing type",
-        add_property_finishing_luxury: "Luxury",
-        add_property_finishing_good: "Good",
-        add_property_finishing_normal: "Normal",
-        add_property_finishing_unfinished: "Unfinished",
+        add_property_finishing_placeholder: "Enter finishing type (e.g. Luxury / Good / Normal)",
         add_property_drop_zone: "Drag images here or click to select",
         add_property_select_images: "Select Images",
         add_property_map_label: "Map Location Link (Optional)",
         add_property_map_placeholder: "https://www.google.com/maps?q=33.5,36.3",
         add_property_consent: "I agree to the storage and processing of my data according to the",
-        add_property_commission: "Commission rate is 2%",
+        add_property_commission: "💰 Commission rate is 2%",
         add_property_finishing_shell: "Shell & Core",
         
         // ---------- Errors ----------
         error_loading: "No data, please add properties",
         error_api: "Server connection failed",
-        unknown: "Unknown"
+        unknown: "Unknown",
+        
+        // ---------- Governorate Names (for Add Property form and filter) ----------
+        governorate_damascus: "Damascus",
+        governorate_aleppo: "Aleppo",
+        governorate_homs: "Homs",
+        governorate_latakia: "Latakia",
+        governorate_tartus: "Tartus",
+        governorate_hama: "Hama",
+        governorate_deir_ez_zor: "Deir ez-Zor",
+        governorate_hasakah: "Al-Hasakah",
+        governorate_raqqa: "Ar-Raqqah",
+        governorate_idlib: "Idlib",
+        governorate_daraa: "Daraa",
+        governorate_suwayda: "As-Suwayda",
+        governorate_quneitra: "Quneitra"
     }
 };

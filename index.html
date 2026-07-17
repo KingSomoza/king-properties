@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
     <head>
+            <!-- ===== حل مشكلة الترميز ===== -->
+            <meta charset="UTF-8">
+            <!-- ... المحتوى الموجود ... -->
+            
+            <!-- ✅ Cloudflare Turnstile -->
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
         <!-- ===== حل مشكلة الترميز ===== -->
         <meta charset="UTF-8">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -37,7 +43,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <link rel="stylesheet" href="style.css">
-    </head>
+        </head>
 <body>
 
 <!-- ===== PRELOADER ===== -->
@@ -121,19 +127,19 @@
                 <!-- الإحصائيات -->
                 <div class="hero-stats-luxury">
                     <div class="stat-card-luxury">
-                        <div class="stat-number-luxury" id="heroAvailable">0</div>
+                        <div class="stat-number-luxury loading" id="heroAvailable">0</div>
                         <div class="stat-label-luxury" data-i18n="hero_available_label">عقار متاح</div>
                         <div class="stat-icon-luxury"><i class="fas fa-home"></i></div>
                     </div>
                     <div class="stat-divider-luxury"></div>
                     <div class="stat-card-luxury">
-                        <div class="stat-number-luxury" id="heroSold">0</div>
+                        <div class="stat-number-luxury loading" id="heroSold">0</div>
                         <div class="stat-label-luxury" data-i18n="hero_sold_label">تم البيع/الإيجار</div>
                         <div class="stat-icon-luxury"><i class="fas fa-handshake"></i></div>
                     </div>
                     <div class="stat-divider-luxury"></div>
                     <div class="stat-card-luxury">
-                        <div class="stat-number-luxury" id="heroVisitors">0</div>
+                        <div class="stat-number-luxury loading" id="heroVisitors">0</div>
                         <div class="stat-label-luxury" data-i18n="hero_visitors_label">إجمالي الزوار</div>
                         <div class="stat-icon-luxury"><i class="fas fa-user-friends"></i></div>
                     </div>
@@ -240,7 +246,7 @@
             <span class="section-badge">أحدث العقارات</span>
             <h2 class="section-title"><span data-i18n="section_title">عقارات</span> <span class="gold-text" data-i18n="section_title_span">مميزة</span></h2>
             <p class="section-subtitle">نقدم لكم أفضل الخيارات العقارية في سوريا</p>
-            <div class="results-info"><span>نتائج البحث:</span><span id="resultsCount">0</span><span>عقار</span></div>
+            <div class="results-info"><span>نتائج البحث:</span><span id="resultsCount" class="loading">0</span><span>عقار</span></div>
         </div>
         <div class="properties-grid" id="propertiesGrid"></div>
         <div class="load-more" id="loadMoreBtn" style="display: none;">
@@ -303,22 +309,22 @@
                 <div class="footer-stats-grid">
                     <div class="footer-stat-item">
                         <i class="fas fa-home"></i>
-                        <span class="footer-stat-number" id="statsAvailable">0</span>
+                        <span class="footer-stat-number loading" id="statsAvailable">0</span>
                         <span class="footer-stat-label" data-i18n="stats_available_label">عقار متاح</span>
                     </div>
                     <div class="footer-stat-item">
                         <i class="fas fa-handshake"></i>
-                        <span class="footer-stat-number" id="statsSold">0</span>
+                        <span class="footer-stat-number loading" id="statsSold">0</span>
                         <span class="footer-stat-label" data-i18n="stats_sold_label">تم البيع/الإيجار</span>
                     </div>
                     <div class="footer-stat-item">
                         <i class="fas fa-globe"></i>
-                        <span class="footer-stat-number" id="statsVisitors">0</span>
+                        <span class="footer-stat-number loading" id="statsVisitors">0</span>
                         <span class="footer-stat-label" data-i18n="stats_visitors_label">إجمالي الزوار</span>
                     </div>
                     <div class="footer-stat-item">
                         <i class="fab fa-whatsapp"></i>
-                        <span class="footer-stat-number" id="statsContacts">0</span>
+                        <span class="footer-stat-number loading" id="statsContacts">0</span>
                         <span class="footer-stat-label" data-i18n="stats_contacts_label">استفسار</span>
                     </div>
                 </div>
@@ -693,7 +699,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="propertyArea"><span data-i18n="add_property_area_label">المساحة (م²)</span> <span class="required">*</span></label>
+                            <label for="propertyArea"><span data-i18n="add_property_area_label">المساحة (m²)</span> <span class="required">*</span></label>
                             <input type="number" id="propertyArea" class="form-input" data-i18n-placeholder="add_property_area_placeholder" placeholder="مثال: 150" required>
                         </div>
                     </div>
@@ -727,25 +733,16 @@
 
                     <!-- ✅  و التشطيب حقل نوع الملكية -->
                     <!-- ✅ حقل نوع الملكية + التشطيب (صف واحد) -->
+                    <!-- ✅ حقل نوع الملكية + التشطيب (صف واحد) -->
+                    <!-- ✅ حقل نوع الملكية + الإكساء (كتابة حرة) -->
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="propertyOwnership"><span data-i18n="add_property_ownership_label">نوع الملكية</span></label>
-                            <select id="propertyOwnership" class="filter-select">
-                                <option value="" data-i18n="add_property_ownership_placeholder">اختر نوع الملكية</option>
-                                <option value="طابو أخضر" data-i18n="add_property_ownership_owned">طابو أخضر</option>
-                                <option value="مشاع" data-i18n="add_property_ownership_shared">مشاع (أسهم)</option>
-                                <option value="حكم محكمة" data-i18n="add_property_ownership_court">حكم محكمة</option>
-                            </select>
+                            <label for="propertyOwnership"><span data-i18n="add_property_ownership_label">نوع الملكية</span> <span class="required">*</span></label>
+                            <input type="text" id="propertyOwnership" class="form-input" data-i18n-placeholder="add_property_ownership_placeholder" placeholder="مثال: طابو أخضر" required>
                         </div>
                         <div class="form-group">
-                            <label for="propertyFinishing"><span data-i18n="add_property_finishing_label">نوع التشطيب</span></label>
-                            <select id="propertyFinishing" class="filter-select" required>
-                                <option value="" data-i18n="add_property_finishing_placeholder">اختر نوع التشطيب</option>
-                                <option value="فاخر" data-i18n="add_property_finishing_luxury">فاخر</option>
-                                <option value="جيد" data-i18n="add_property_finishing_good">جيد</option>
-                                <option value="عادي" data-i18n="add_property_finishing_normal">عادي</option>
-                                <option value="على العضم" data-i18n="add_property_finishing_shell">على العضم</option>
-                            </select>
+                            <label for="propertyFinishing"><span data-i18n="add_property_finishing_label">نوع الإكساء</span> <span class="required">*</span></label>
+                            <input type="text" id="propertyFinishing" class="form-input" data-i18n-placeholder="add_property_finishing_placeholder" placeholder="مثال: فاخر / جيد / عادي" required>
                         </div>
                     </div>
                     

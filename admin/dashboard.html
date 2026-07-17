@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>لوحة التحكم - King Properties</title>
+<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="mark">K</div>
+      <span>King Properties</span>
+    </div>
+
+    <ul class="nav-list">
+      <li class="nav-item active" data-view="home"><i class="fa-solid fa-house"></i> الرئيسية</li>
+      <li class="nav-item" data-view="properties"><i class="fa-solid fa-building"></i> إدارة العقارات</li>
+      <li class="nav-item" data-view="requests"><i class="fa-solid fa-inbox"></i> طلبات الإضافة
+        <span class="nav-badge" id="requestsBadge" style="display:none">0</span>
+      </li>
+      <li class="nav-item" data-view="stats"><i class="fa-solid fa-chart-column"></i> الإحصائيات</li>
+      <li class="nav-item" data-view="users" id="navUsers"><i class="fa-solid fa-users"></i> المستخدمون</li>
+      <li class="nav-item" data-view="settings"><i class="fa-solid fa-gear"></i> الإعدادات</li>
+    </ul>
+
+    <div class="sidebar-logout">
+      <button id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <!-- ===== Main ===== -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+        <h2 id="viewTitle">الرئيسية</h2>
+      </div>
+      <div class="topbar-user">
+        <div>
+          <div class="uname" id="topUserName">—</div>
+          <div class="urole" id="topUserRole">—</div>
+        </div>
+        <div class="avatar" id="topUserAvatar">?</div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ---------- HOME ---------- -->
+      <section class="view active" id="view-home">
+        <div class="stats-grid" id="statsGrid">
+          <!-- تُملأ من admin.js -->
+        </div>
+
+        <div class="charts-grid">
+          <div class="panel framed">
+            <div class="panel-head"><h3>معدل إضافة العقارات</h3></div>
+            <div class="panel-body"><canvas id="chartMonthly" height="150"></canvas></div>
+          </div>
+          <div class="panel framed">
+            <div class="panel-head"><h3>بيع مقابل إيجار</h3></div>
+            <div class="panel-body"><canvas id="chartSaleRent" height="150"></canvas></div>
+          </div>
+        </div>
+
+        <div class="charts-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>أحدث العقارات المضافة</h3>
+              <span style="font-size: 12px; color: var(--ink-soft);">آخر 5 عقارات</span>
+            </div>
+            <div class="panel-body" style="padding: 8px 14px;">
+              <div id="recentPropertiesBody"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>أحدث الطلبات</h3>
+              <span style="font-size: 12px; color: var(--ink-soft);">آخر 5 طلبات</span>
+            </div>
+            <div class="panel-body" style="padding: 8px 14px;">
+              <div id="recentRequestsBody"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- PROPERTIES ---------- -->
+      <section class="view" id="view-properties">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>إدارة العقارات</h3>
+            <button class="btn btn-primary" id="addPropertyBtn"><i class="fa-solid fa-plus"></i> إضافة عقار جديد</button>
+          </div>
+          <div class="filters-row">
+            <input type="text" id="propSearch" placeholder="بحث بالعنوان، المعرف، أو رقم المالك...">
+            <select id="propFilterType"><option value="">كل الأنواع</option></select>
+            <select id="propFilterStatus">
+              <option value="">كل الحالات</option>
+              <option value="نشط">نشط</option>
+              <option value="غير نشط">غير نشط</option>
+              <option value="مباع">مباع</option>
+              <option value="مؤجر">مؤجر</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>المعرف</th>
+                  <th>العنوان</th>
+                  <th>نوع العملية</th>
+                  <th>نوع العقار</th>
+                  <th>المحافظة</th>
+                  <th>السعر</th>
+                  <th>المساحة</th>
+                  <th>الغرف</th>
+                  <th>الحالة</th>
+                  <th>المالك</th>
+                  <th>تاريخ الإضافة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="propertiesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- REQUESTS ---------- -->
+<section class="view" id="view-requests">
+  <div class="panel">
+    <div class="panel-head">
+      <h3>📋 طلبات إضافة العقارات</h3>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span style="font-size: 12px; color: var(--ink-soft);" id="requestsCount">0 طلب</span>
+      </div>
+    </div>
+    
+    <!-- ✅ فلاتر متقدمة -->
+    <div class="filters-row" style="flex-wrap: wrap; gap: 10px;">
+      <input type="text" id="reqSearch" placeholder="بحث بالاسم، الهاتف، أو عنوان العقار..." style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px;">
+      <select id="reqFilterStatus" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; min-width: 130px;">
+        <option value="">كل الحالات</option>
+        <option value="قيد المراجعة">⏳ قيد المراجعة</option>
+        <option value="موافق عليه">✅ موافق عليه</option>
+        <option value="مرفوض">❌ مرفوض</option>
+      </select>
+      <select id="reqFilterType" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; min-width: 130px;">
+        <option value="">كل الأنواع</option>
+        <option value="sale">للبيع</option>
+        <option value="rent">للإيجار</option>
+      </select>
+      <button class="btn btn-sm btn-gold-outline" onclick="loadRequests()" title="تحديث"><i class="fa-solid fa-rotate"></i></button>
+    </div>
+    
+    <!-- ✅ جدول الطلبات الكامل -->
+    <div class="table-wrap" style="max-height: 600px; overflow-y: auto;">
+      <table>
+        <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 2;">
+          <tr>
+            <th>#</th>
+            <th>تاريخ الطلب</th>
+            <th>اسم المالك</th>
+            <th>رقم الهاتف</th>
+            <th>عنوان العقار</th>
+            <th>السعر</th>
+            <th>نوع العملية</th>
+            <th>نوع العقار</th>
+            <th>المساحة</th>
+            <th>عدد الغرف</th>
+            <th>عدد الحمامات</th>
+            <th>المحافظة</th>
+            <th>المنطقة</th>
+            <th>نوع الملكية</th>
+            <th>نوع الإكساء</th>
+            <th>رابط الخريطة</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="requestsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+      <!-- ---------- STATS ---------- -->
+      <section class="view" id="view-stats">
+        <div class="panel-head" style="padding:0 0 14px;">
+          <div></div>
+          <select id="statsPeriod" style="border:1px solid var(--line); border-radius:7px; padding:8px 11px;">
+            <option value="week">أسبوع</option>
+            <option value="month" selected>شهر</option>
+            <option value="quarter">ربع سنة</option>
+            <option value="year">سنة</option>
+          </select>
+        </div>
+        <div class="charts-grid">
+          <div class="panel framed">
+            <div class="panel-head"><h3>توزيع الأسعار</h3></div>
+            <div class="panel-body"><canvas id="chartPrices" height="160"></canvas></div>
+          </div>
+          <div class="panel framed">
+            <div class="panel-head"><h3>مباع مقابل غير مباع</h3></div>
+            <div class="panel-body"><canvas id="chartSoldRatio" height="160"></canvas></div>
+          </div>
+        </div>
+        <div class="panel framed">
+          <div class="panel-head">
+            <h3>الزوار والمشاهدات</h3>
+            <button class="btn btn-sm btn-gold-outline" id="exportStatsBtn"><i class="fa-solid fa-file-export"></i> تصدير CSV</button>
+          </div>
+          <div class="panel-body"><canvas id="chartVisitors" height="120"></canvas></div>
+        </div>
+      </section>
+
+      <!-- ---------- USERS ---------- -->
+      <section class="view" id="view-users">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>إدارة المستخدمين</h3>
+            <button class="btn btn-primary" id="addUserBtn"><i class="fa-solid fa-user-plus"></i> إضافة مستخدم جديد</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>المعرف</th><th>اسم المستخدم</th><th>الدور</th><th>آخر تسجيل دخول</th><th></th></tr></thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- SETTINGS ---------- -->
+<section class="view" id="view-settings">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px;">
+      
+      <!-- ✅ قسم تغيير بيانات الدخول -->
+      <div class="panel">
+          <div class="panel-head"><h3>🔑 تغيير بيانات الدخول</h3></div>
+          <div class="panel-body">
+              <div class="form-field" style="margin-bottom:14px;">
+                  <label>اسم المستخدم الجديد (اختياري)</label>
+                  <input type="text" id="newUsername" placeholder="اتركه فارغاً لعدم التغيير">
+              </div>
+              <div class="form-field" style="margin-bottom:14px;">
+                  <label>كلمة المرور الجديدة</label>
+                  <input type="password" id="newPassword" placeholder="••••••••">
+              </div>
+              <div class="form-field" style="margin-bottom:18px;">
+                  <label>تأكيد كلمة المرور</label>
+                  <input type="password" id="confirmPassword" placeholder="••••••••">
+              </div>
+              <button class="btn btn-primary" id="saveSettingsBtn">حفظ التغييرات</button>
+          </div>
+      </div>
+      
+      <!-- ✅ قسم تعديل إجمالي الزوار -->
+      <div class="panel">
+          <div class="panel-head"><h3>👥 تعديل إجمالي الزوار</h3></div>
+          <div class="panel-body">
+              <div class="form-field" style="margin-bottom:14px;">
+                  <label>إجمالي الزوار الحالي</label>
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                      <input type="number" id="visitorsCountInput" style="flex:1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--bg-page);" placeholder="أدخل عدد الزوار">
+                      <button class="btn btn-primary" id="updateVisitorsBtn" style="white-space: nowrap;">
+                          <i class="fas fa-save"></i> تحديث
+                      </button>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 13px; color: var(--ink-soft);">
+                      <i class="fas fa-info-circle"></i> 
+                      <span id="currentVisitorsDisplay">العدد الحالي: 0</span>
+                  </div>
+              </div>
+              <div style="margin-top: 10px; padding: 12px; background: rgba(201,168,76,0.08); border-radius: 8px; border: 1px solid rgba(201,168,76,0.2);">
+                  <p style="margin:0; font-size: 13px; color: var(--ink-soft);">
+                      <i class="fas fa-lightbulb" style="color: var(--gold);"></i>
+                      يمكنك تعديل عدد الزوار يدوياً لأي سبب (تصحيح الأخطاء، إضافة زوار وهميين، إلخ).
+                  </p>
+              </div>
+          </div>
+      </div>
+
+              <!-- ✅ قسم تعديل إجمالي الاستفسارات -->
+              <div class="panel" style="margin-top: 20px;">
+                <div class="panel-head"><h3>📞 تعديل إجمالي الاستفسارات</h3></div>
+                <div class="panel-body">
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label>إجمالي الاستفسارات الحالي</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" id="contactsCountInput" style="flex:1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--bg-page);" placeholder="أدخل عدد الاستفسارات">
+                            <button class="btn btn-primary" id="updateContactsBtn" style="white-space: nowrap;">
+                                <i class="fas fa-save"></i> تحديث
+                            </button>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 13px; color: var(--ink-soft);">
+                            <i class="fas fa-info-circle"></i> 
+                            <span id="currentContactsDisplay">العدد الحالي: 0</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; padding: 12px; background: rgba(201,168,76,0.08); border-radius: 8px; border: 1px solid rgba(201,168,76,0.2);">
+                        <p style="margin:0; font-size: 13px; color: var(--ink-soft);">
+                            <i class="fas fa-lightbulb" style="color: var(--gold);"></i>
+                            يمكنك تعديل عدد الاستفسارات يدوياً لأي سبب (تصحيح الأخطاء، إضافة استفسارات وهمية، إلخ).
+                        </p>
+                    </div>
+                </div>
+            </div>
+      
+  </div>
+</section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== Modal (يُعاد استخدامه لإضافة/تعديل عقار، طلب، مستخدم) ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">—</h3>
+      <button id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="admin-config.js"></script>
+<script src="session.js"></script>
+<script src="admin.js"></script>
+<script src="charts.js"></script>
+</body>
+</html>
