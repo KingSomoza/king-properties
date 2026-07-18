@@ -9233,3 +9233,43 @@ footer {
     pointer-events: auto !important;
     user-select: auto !important;
 }
+
+/* ============================================
+   AREA AUTOCOMPLETE - تحسينات إضافية
+   ============================================ */
+
+/* تنسيق القائمة المنسدلة */
+.area-autocomplete-dropdown {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: white !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15) !important;
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    z-index: 99999 !important;
+    display: none !important;
+}
+
+/* تنسيق عناصر القائمة */
+.area-autocomplete-dropdown .autocomplete-item {
+    padding: 10px 15px !important;
+    cursor: pointer !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    transition: all 0.15s ease !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.area-autocomplete-dropdown .autocomplete-item:hover {
+    background: rgba(201, 168, 76, 0.08) !important;
+}
+
+/* تنسيق الحقل الإنجليزي الجديد */
+#propertyDistrictEn {
+    margin-top: 4px;
+}

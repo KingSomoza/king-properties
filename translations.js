@@ -270,6 +270,7 @@ const translations = {
         add_property_consent: "أوافق على تخزين بياناتي ومعالجتها وفقاً لـ",
         add_property_commission: "💰 نسبة العمولة هي 2%",
         add_property_finishing_shell: "على العضم",
+        add_property_district_hint: "اكتب اسم المنطقة وسيتم تصحيحه وترجمته تلقائياً",
         
         // ---------- أخطاء وأخرى ----------
         error_loading: "لا توجد بيانات، يرجى إضافة عقارات",
@@ -560,6 +561,7 @@ const translations = {
         add_property_consent: "I agree to the storage and processing of my data according to the",
         add_property_commission: "💰 Commission rate is 2%",
         add_property_finishing_shell: "Shell & Core",
+        add_property_district_hint: "Type the area name and it will be auto-corrected and translated",
         
         // ---------- Errors ----------
         error_loading: "No data, please add properties",

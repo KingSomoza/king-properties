@@ -53,12 +53,16 @@
 
     <main class="content">
 
+      <!-- ============================================================ -->
       <!-- ---------- HOME ---------- -->
+      <!-- ============================================================ -->
       <section class="view active" id="view-home">
+        <!-- ✅ بطاقات الإحصائيات -->
         <div class="stats-grid" id="statsGrid">
           <!-- تُملأ من admin.js -->
         </div>
 
+        <!-- ✅ الرسوم البيانية في الرئيسية -->
         <div class="charts-grid">
           <div class="panel framed">
             <div class="panel-head"><h3>معدل إضافة العقارات</h3></div>
@@ -69,20 +73,34 @@
             <div class="panel-body"><canvas id="chartSaleRent" height="150"></canvas></div>
           </div>
         </div>
+        
+        <!-- ✅ صف جديد للرسوم البيانية الإضافية -->
+        <div class="charts-grid" style="margin-top: 20px;">
+          <div class="panel framed">
+            <div class="panel-head"><h3><i class="fa-solid fa-building"></i> توزيع العقارات حسب النوع</h3></div>
+            <div class="panel-body"><canvas id="chartPropertyTypes" height="150"></canvas></div>
+          </div>
+          <div class="panel framed">
+            <div class="panel-head"><h3><i class="fa-solid fa-city"></i> توزيع العقارات حسب المحافظة</h3></div>
+            <div class="panel-body"><canvas id="chartGovernorates" height="150"></canvas></div>
+          </div>
+        </div>
 
-        <div class="charts-grid" style="grid-template-columns:1fr 1fr;">
-          <div class="panel">
+        <!-- ✅ أحدث العقارات والطلبات -->
+        <div class="recent-grid">
+          <div class="panel recent-properties-panel">
             <div class="panel-head">
-              <h3>أحدث العقارات المضافة</h3>
+              <h3><i class="fa-solid fa-building"></i> أحدث العقارات المضافة</h3>
               <span style="font-size: 12px; color: var(--ink-soft);">آخر 5 عقارات</span>
             </div>
             <div class="panel-body" style="padding: 8px 14px;">
               <div id="recentPropertiesBody"></div>
             </div>
           </div>
-          <div class="panel">
+          
+          <div class="panel recent-requests-panel">
             <div class="panel-head">
-              <h3>أحدث الطلبات</h3>
+              <h3><i class="fa-solid fa-inbox"></i> أحدث الطلبات</h3>
               <span style="font-size: 12px; color: var(--ink-soft);">آخر 5 طلبات</span>
             </div>
             <div class="panel-body" style="padding: 8px 14px;">
@@ -92,7 +110,9 @@
         </div>
       </section>
 
+      <!-- ============================================================ -->
       <!-- ---------- PROPERTIES ---------- -->
+      <!-- ============================================================ -->
       <section class="view" id="view-properties">
         <div class="panel">
           <div class="panel-head">
@@ -134,95 +154,160 @@
         </div>
       </section>
 
+      <!-- ============================================================ -->
       <!-- ---------- REQUESTS ---------- -->
-<section class="view" id="view-requests">
-  <div class="panel">
-    <div class="panel-head">
-      <h3>📋 طلبات إضافة العقارات</h3>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <span style="font-size: 12px; color: var(--ink-soft);" id="requestsCount">0 طلب</span>
-      </div>
-    </div>
-    
-    <!-- ✅ فلاتر متقدمة -->
-    <div class="filters-row" style="flex-wrap: wrap; gap: 10px;">
-      <input type="text" id="reqSearch" placeholder="بحث بالاسم، الهاتف، أو عنوان العقار..." style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px;">
-      <select id="reqFilterStatus" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; min-width: 130px;">
-        <option value="">كل الحالات</option>
-        <option value="قيد المراجعة">⏳ قيد المراجعة</option>
-        <option value="موافق عليه">✅ موافق عليه</option>
-        <option value="مرفوض">❌ مرفوض</option>
-      </select>
-      <select id="reqFilterType" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; min-width: 130px;">
-        <option value="">كل الأنواع</option>
-        <option value="sale">للبيع</option>
-        <option value="rent">للإيجار</option>
-      </select>
-      <button class="btn btn-sm btn-gold-outline" onclick="loadRequests()" title="تحديث"><i class="fa-solid fa-rotate"></i></button>
-    </div>
-    
-    <!-- ✅ جدول الطلبات الكامل -->
-    <div class="table-wrap" style="max-height: 600px; overflow-y: auto;">
-      <table>
-        <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 2;">
-          <tr>
-            <th>#</th>
-            <th>تاريخ الطلب</th>
-            <th>اسم المالك</th>
-            <th>رقم الهاتف</th>
-            <th>عنوان العقار</th>
-            <th>السعر</th>
-            <th>نوع العملية</th>
-            <th>نوع العقار</th>
-            <th>المساحة</th>
-            <th>عدد الغرف</th>
-            <th>عدد الحمامات</th>
-            <th>المحافظة</th>
-            <th>المنطقة</th>
-            <th>نوع الملكية</th>
-            <th>نوع الإكساء</th>
-            <th>رابط الخريطة</th>
-            <th>الحالة</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="requestsBody"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-      <!-- ---------- STATS ---------- -->
-      <section class="view" id="view-stats">
-        <div class="panel-head" style="padding:0 0 14px;">
-          <div></div>
-          <select id="statsPeriod" style="border:1px solid var(--line); border-radius:7px; padding:8px 11px;">
-            <option value="week">أسبوع</option>
-            <option value="month" selected>شهر</option>
-            <option value="quarter">ربع سنة</option>
-            <option value="year">سنة</option>
-          </select>
-        </div>
-        <div class="charts-grid">
-          <div class="panel framed">
-            <div class="panel-head"><h3>توزيع الأسعار</h3></div>
-            <div class="panel-body"><canvas id="chartPrices" height="160"></canvas></div>
-          </div>
-          <div class="panel framed">
-            <div class="panel-head"><h3>مباع مقابل غير مباع</h3></div>
-            <div class="panel-body"><canvas id="chartSoldRatio" height="160"></canvas></div>
-          </div>
-        </div>
-        <div class="panel framed">
+      <!-- ============================================================ -->
+      <section class="view" id="view-requests">
+        <div class="panel">
           <div class="panel-head">
-            <h3>الزوار والمشاهدات</h3>
-            <button class="btn btn-sm btn-gold-outline" id="exportStatsBtn"><i class="fa-solid fa-file-export"></i> تصدير CSV</button>
+            <h3><i class="fa-solid fa-list-check"></i> طلبات إضافة العقارات</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span style="font-size: 12px; color: var(--ink-soft);" id="requestsCount">0 طلب</span>
+            </div>
           </div>
-          <div class="panel-body"><canvas id="chartVisitors" height="120"></canvas></div>
+          
+          <div class="filters-row" style="flex-wrap: wrap; gap: 10px;">
+            <input type="text" id="reqSearch" placeholder="بحث بالاسم، الهاتف، أو عنوان العقار..." style="flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px;">
+            <select id="reqFilterStatus" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; min-width: 130px;">
+              <option value="">كل الحالات</option>
+              <option value="قيد المراجعة">قيد المراجعة</option>
+              <option value="موافق عليه">موافق عليه</option>
+              <option value="مرفوض">مرفوض</option>
+            </select>
+            <select id="reqFilterType" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; min-width: 130px;">
+              <option value="">كل الأنواع</option>
+              <option value="sale">للبيع</option>
+              <option value="rent">للإيجار</option>
+            </select>
+            <button class="btn btn-sm btn-gold-outline" onclick="loadRequests()" title="تحديث"><i class="fa-solid fa-rotate"></i></button>
+          </div>
+          
+          <div class="table-wrap" style="max-height: 600px; overflow-y: auto;">
+            <table>
+              <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 2;">
+                <tr>
+                  <th>#</th>
+                  <th>تاريخ الطلب</th>
+                  <th>اسم المالك</th>
+                  <th>رقم الهاتف</th>
+                  <th>عنوان العقار</th>
+                  <th>السعر</th>
+                  <th>نوع العملية</th>
+                  <th>نوع العقار</th>
+                  <th>المساحة</th>
+                  <th>عدد الغرف</th>
+                  <th>عدد الحمامات</th>
+                  <th>المحافظة</th>
+                  <th>المنطقة</th>
+                  <th>نوع الملكية</th>
+                  <th>نوع الإكساء</th>
+                  <th>رابط الخريطة</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="requestsBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
+      <!-- ============================================================ -->
+      <!-- ---------- STATS ---------- -->
+      <!-- ============================================================ -->
+      <section class="view" id="view-stats">
+        <div class="panel-head" style="padding:0 0 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h3 style="margin:0; font-size:18px; font-weight:700;"><i class="fa-solid fa-chart-column"></i> لوحة الإحصائيات</h3>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <span style="font-size: 13px; color: var(--ink-soft);">من:</span>
+            <input type="date" id="statsDateFrom" style="border:1px solid var(--line); border-radius:7px; padding:6px 10px; font-family: inherit; background: var(--bg-card);">
+            <span style="font-size: 13px; color: var(--ink-soft);">إلى:</span>
+            <input type="date" id="statsDateTo" style="border:1px solid var(--line); border-radius:7px; padding:6px 10px; font-family: inherit; background: var(--bg-card);">
+            <button class="btn btn-sm btn-gold-outline" onclick="loadStatsCharts()" title="تحديث"><i class="fa-solid fa-rotate"></i></button>
+            <button class="btn btn-sm" onclick="resetStatsDateRange()" title="إعادة تعيين" style="background: var(--ink-soft); color: white; border: none; padding: 6px 14px; border-radius: 7px; cursor: pointer;">
+              <i class="fa-solid fa-undo"></i>
+            </button>
+          </div>
+        </div>
+
+<!-- ✅ الصف الأول في الإحصائيات -->
+<div class="charts-grid" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+  <div class="panel framed">
+    <div class="panel-head"><h3><i class="fa-solid fa-chart-line"></i> معدل إضافة العقارات</h3></div>
+    <div class="panel-body"><canvas id="statsChartMonthly" height="150"></canvas></div>  <!-- ✅ changed -->
+  </div>
+  <div class="panel framed">
+    <div class="panel-head"><h3><i class="fa-solid fa-chart-pie"></i> بيع مقابل إيجار</h3></div>
+    <div class="panel-body"><canvas id="statsChartSaleRent" height="150"></canvas></div>  <!-- ✅ changed -->
+  </div>
+</div>
+
+<!-- ✅ الصف الثاني -->
+<div class="charts-grid" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+  <div class="panel framed">
+    <div class="panel-head"><h3><i class="fa-solid fa-building"></i> توزيع العقارات حسب النوع</h3></div>
+    <div class="panel-body"><canvas id="statsChartPropertyTypes" height="150"></canvas></div>  <!-- ✅ changed -->
+  </div>
+  <div class="panel framed">
+    <div class="panel-head"><h3><i class="fa-solid fa-city"></i> توزيع العقارات حسب المحافظة</h3></div>
+    <div class="panel-body"><canvas id="statsChartGovernorates" height="150"></canvas></div>  <!-- ✅ changed -->
+  </div>
+</div>
+
+<!-- ✅ الصف الثالث: توزيع الأسعار (للبيع وللإيجار) -->
+<div class="charts-grid" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+  <div class="panel framed">
+    <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <h3 style="margin:0; font-size:15px; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-tag" style="color: #27ae60;"></i> توزيع الأسعار (للبيع)
+      </h3>
+      <span id="salePriceTotal" style="font-size: 13px; color: var(--ink-soft); background: rgba(39, 174, 96, 0.1); padding: 4px 14px; border-radius: 20px; border: 1px solid rgba(39, 174, 96, 0.2);">
+        الإجمالي: 0
+      </span>
+    </div>
+    <div class="panel-body"><canvas id="statsChartSalePrices" height="180"></canvas></div>
+  </div>
+  <div class="panel framed">
+    <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <h3 style="margin:0; font-size:15px; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-key" style="color: #f39c12;"></i> توزيع الأسعار (للإيجار)
+      </h3>
+      <span id="rentPriceTotal" style="font-size: 13px; color: var(--ink-soft); background: rgba(243, 156, 18, 0.1); padding: 4px 14px; border-radius: 20px; border: 1px solid rgba(243, 156, 18, 0.2);">
+        الإجمالي: 0
+      </span>
+    </div>
+    <div class="panel-body"><canvas id="statsChartRentPrices" height="180"></canvas></div>
+  </div>
+</div>
+
+<!-- ✅ الصف الرابع: مباع مقابل غير مباع + الزوار -->
+<div class="charts-grid" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+  <div class="panel framed">
+    <div class="panel-head"><h3><i class="fa-solid fa-handshake"></i> مباع مقابل غير مباع</h3></div>
+    <div class="panel-body"><canvas id="statsChartSoldRatio" height="180"></canvas></div>
+  </div>
+  <div class="panel framed">
+    <div class="panel-head">
+      <h3><i class="fa-solid fa-users"></i> الزوار والمشاهدات</h3>
+      <button class="btn btn-sm btn-gold-outline" id="exportStatsBtn"><i class="fa-solid fa-file-export"></i> تصدير CSV</button>
+    </div>
+    <div class="panel-body"><canvas id="statsChartVisitors" height="180"></canvas></div>
+  </div>
+</div>
+
+<!-- ✅ الصف الرابع -->
+<div class="panel framed">
+  <div class="panel-head">
+    <h3><i class="fa-solid fa-users"></i> الزوار والمشاهدات</h3>
+    <button class="btn btn-sm btn-gold-outline" id="exportStatsBtn"><i class="fa-solid fa-file-export"></i> تصدير CSV</button>
+  </div>
+  <div class="panel-body"><canvas id="statsChartVisitors" height="120"></canvas></div>  <!-- ✅ changed -->
+</div>
+      </section>
+
+      <!-- ============================================================ -->
       <!-- ---------- USERS ---------- -->
+      <!-- ============================================================ -->
       <section class="view" id="view-users">
         <div class="panel">
           <div class="panel-head">
@@ -238,90 +323,92 @@
         </div>
       </section>
 
+      <!-- ============================================================ -->
       <!-- ---------- SETTINGS ---------- -->
-<section class="view" id="view-settings">
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px;">
-      
-      <!-- ✅ قسم تغيير بيانات الدخول -->
-      <div class="panel">
-          <div class="panel-head"><h3>🔑 تغيير بيانات الدخول</h3></div>
-          <div class="panel-body">
+      <!-- ============================================================ -->
+      <section class="view" id="view-settings">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px;">
+          
+          <!-- ✅ قسم تغيير بيانات الدخول -->
+          <div class="panel">
+            <div class="panel-head"><h3><i class="fa-solid fa-key"></i> تغيير بيانات الدخول</h3></div>
+            <div class="panel-body">
               <div class="form-field" style="margin-bottom:14px;">
-                  <label>اسم المستخدم الجديد (اختياري)</label>
-                  <input type="text" id="newUsername" placeholder="اتركه فارغاً لعدم التغيير">
+                <label>اسم المستخدم الجديد (اختياري)</label>
+                <input type="text" id="newUsername" placeholder="اتركه فارغاً لعدم التغيير">
               </div>
               <div class="form-field" style="margin-bottom:14px;">
-                  <label>كلمة المرور الجديدة</label>
-                  <input type="password" id="newPassword" placeholder="••••••••">
+                <label>كلمة المرور الجديدة</label>
+                <input type="password" id="newPassword" placeholder="••••••••">
               </div>
               <div class="form-field" style="margin-bottom:18px;">
-                  <label>تأكيد كلمة المرور</label>
-                  <input type="password" id="confirmPassword" placeholder="••••••••">
+                <label>تأكيد كلمة المرور</label>
+                <input type="password" id="confirmPassword" placeholder="••••••••">
               </div>
               <button class="btn btn-primary" id="saveSettingsBtn">حفظ التغييرات</button>
+            </div>
           </div>
-      </div>
-      
-      <!-- ✅ قسم تعديل إجمالي الزوار -->
-      <div class="panel">
-          <div class="panel-head"><h3>👥 تعديل إجمالي الزوار</h3></div>
-          <div class="panel-body">
+          
+          <!-- ✅ قسم تعديل إجمالي الزوار -->
+          <div class="panel">
+            <div class="panel-head"><h3><i class="fa-solid fa-users"></i> تعديل إجمالي الزوار</h3></div>
+            <div class="panel-body">
               <div class="form-field" style="margin-bottom:14px;">
-                  <label>إجمالي الزوار الحالي</label>
-                  <div style="display: flex; gap: 10px; align-items: center;">
-                      <input type="number" id="visitorsCountInput" style="flex:1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--bg-page);" placeholder="أدخل عدد الزوار">
-                      <button class="btn btn-primary" id="updateVisitorsBtn" style="white-space: nowrap;">
-                          <i class="fas fa-save"></i> تحديث
-                      </button>
-                  </div>
-                  <div style="margin-top: 8px; font-size: 13px; color: var(--ink-soft);">
-                      <i class="fas fa-info-circle"></i> 
-                      <span id="currentVisitorsDisplay">العدد الحالي: 0</span>
-                  </div>
+                <label>إجمالي الزوار الحالي</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <input type="number" id="visitorsCountInput" style="flex:1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--bg-page);" placeholder="أدخل عدد الزوار">
+                  <button class="btn btn-primary" id="updateVisitorsBtn" style="white-space: nowrap;">
+                    <i class="fas fa-save"></i> تحديث
+                  </button>
+                </div>
+                <div style="margin-top: 8px; font-size: 13px; color: var(--ink-soft);">
+                  <i class="fas fa-info-circle"></i> 
+                  <span id="currentVisitorsDisplay">العدد الحالي: 0</span>
+                </div>
               </div>
               <div style="margin-top: 10px; padding: 12px; background: rgba(201,168,76,0.08); border-radius: 8px; border: 1px solid rgba(201,168,76,0.2);">
-                  <p style="margin:0; font-size: 13px; color: var(--ink-soft);">
-                      <i class="fas fa-lightbulb" style="color: var(--gold);"></i>
-                      يمكنك تعديل عدد الزوار يدوياً لأي سبب (تصحيح الأخطاء، إضافة زوار وهميين، إلخ).
-                  </p>
+                <p style="margin:0; font-size: 13px; color: var(--ink-soft);">
+                  <i class="fas fa-lightbulb" style="color: var(--gold);"></i>
+                  يمكنك تعديل عدد الزوار يدوياً لأي سبب (تصحيح الأخطاء، إضافة زوار وهميين، إلخ).
+                </p>
               </div>
-          </div>
-      </div>
-
-              <!-- ✅ قسم تعديل إجمالي الاستفسارات -->
-              <div class="panel" style="margin-top: 20px;">
-                <div class="panel-head"><h3>📞 تعديل إجمالي الاستفسارات</h3></div>
-                <div class="panel-body">
-                    <div class="form-field" style="margin-bottom:14px;">
-                        <label>إجمالي الاستفسارات الحالي</label>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <input type="number" id="contactsCountInput" style="flex:1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--bg-page);" placeholder="أدخل عدد الاستفسارات">
-                            <button class="btn btn-primary" id="updateContactsBtn" style="white-space: nowrap;">
-                                <i class="fas fa-save"></i> تحديث
-                            </button>
-                        </div>
-                        <div style="margin-top: 8px; font-size: 13px; color: var(--ink-soft);">
-                            <i class="fas fa-info-circle"></i> 
-                            <span id="currentContactsDisplay">العدد الحالي: 0</span>
-                        </div>
-                    </div>
-                    <div style="margin-top: 10px; padding: 12px; background: rgba(201,168,76,0.08); border-radius: 8px; border: 1px solid rgba(201,168,76,0.2);">
-                        <p style="margin:0; font-size: 13px; color: var(--ink-soft);">
-                            <i class="fas fa-lightbulb" style="color: var(--gold);"></i>
-                            يمكنك تعديل عدد الاستفسارات يدوياً لأي سبب (تصحيح الأخطاء، إضافة استفسارات وهمية، إلخ).
-                        </p>
-                    </div>
-                </div>
             </div>
-      
-  </div>
-</section>
+          </div>
+
+          <!-- ✅ قسم تعديل إجمالي الاستفسارات -->
+          <div class="panel" style="margin-top: 20px;">
+            <div class="panel-head"><h3><i class="fa-solid fa-phone"></i> تعديل إجمالي الاستفسارات</h3></div>
+            <div class="panel-body">
+              <div class="form-field" style="margin-bottom:14px;">
+                <label>إجمالي الاستفسارات الحالي</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <input type="number" id="contactsCountInput" style="flex:1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--bg-page);" placeholder="أدخل عدد الاستفسارات">
+                  <button class="btn btn-primary" id="updateContactsBtn" style="white-space: nowrap;">
+                    <i class="fas fa-save"></i> تحديث
+                  </button>
+                </div>
+                <div style="margin-top: 8px; font-size: 13px; color: var(--ink-soft);">
+                  <i class="fas fa-info-circle"></i> 
+                  <span id="currentContactsDisplay">العدد الحالي: 0</span>
+                </div>
+              </div>
+              <div style="margin-top: 10px; padding: 12px; background: rgba(201,168,76,0.08); border-radius: 8px; border: 1px solid rgba(201,168,76,0.2);">
+                <p style="margin:0; font-size: 13px; color: var(--ink-soft);">
+                  <i class="fas fa-lightbulb" style="color: var(--gold);"></i>
+                  يمكنك تعديل عدد الاستفسارات يدوياً لأي سبب (تصحيح الأخطاء، إضافة استفسارات وهمية، إلخ).
+                </p>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </section>
 
     </main>
   </div>
 </div>
 
-<!-- ===== Modal (يُعاد استخدامه لإضافة/تعديل عقار، طلب، مستخدم) ===== -->
+<!-- ===== Modal ===== -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-head">

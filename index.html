@@ -725,10 +725,25 @@
                                 <option value="القنيطرة">القنيطرة</option>
                             </select>
                         </div>
+                        <!-- ✅ حقل المنطقة (العربية) - معدل -->
                         <div class="form-group">
-                            <label for="propertyDistrict"><span data-i18n="add_property_district_label">المنطقة</span> <span class="required">*</span></label>
-                            <input type="text" id="propertyDistrict" class="form-input" data-i18n-placeholder="add_property_district_placeholder" placeholder="مثال: المهاجرين" required>
+                            <label for="propertyDistrict">
+                                <span data-i18n="add_property_district_label">المنطقة</span>
+                                <span class="required">*</span>
+                            </label>
+                            <input type="text" id="propertyDistrict" class="form-input" 
+                                data-i18n-placeholder="add_property_district_placeholder" 
+                                placeholder="مثال: المهاجرين" 
+                                required
+                                autocomplete="off">
+                            <small style="color: var(--gray); font-size: 12px; display: block; margin-top: 4px;">
+                                <i class="fas fa-info-circle"></i> 
+                                <span data-i18n="add_property_district_hint">اكتب اسم المنطقة وسيتم تصحيحه وترجمته تلقائياً</span>
+                            </small>
                         </div>
+
+<!-- ✅ حقل المنطقة (الإنجليزية) - سيتم إنشاؤه تلقائياً بواسطة JavaScript -->
+<!-- لا حاجة لإضافته يدوياً، سيتم إنشاؤه بواسطة area-autocomplete.js -->
                     </div>
 
                     <!-- ✅  و التشطيب حقل نوع الملكية -->
@@ -814,5 +829,6 @@
 
 <script src="translations.js"></script>
 <script src="app.js"></script>
+<script src="area-autocomplete.js"></script>
 </body>
 </html>

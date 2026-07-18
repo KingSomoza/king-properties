@@ -4037,7 +4037,8 @@ async function submitAddProperty(event) {
         type: document.getElementById('propertyType')?.value || '',
         area: document.getElementById('propertyArea')?.value?.trim() || '',
         governorate: document.getElementById('propertyGovernorate')?.value || '',
-        district: document.getElementById('propertyDistrict')?.value?.trim() || '',
+        district: document.getElementById('propertyDistrict')?.value?.trim() || '',          // ✅ موجود
+        districtEn: document.getElementById('propertyDistrictEn')?.value?.trim() || '',      // ✅ جديد
         ownership: document.getElementById('propertyOwnership')?.value || '',
         rooms: document.getElementById('propertyRooms')?.value?.trim() || '',
         bathrooms: document.getElementById('propertyBathrooms')?.value?.trim() || '',
@@ -4046,10 +4047,6 @@ async function submitAddProperty(event) {
         images: document.getElementById('propertyImages')?.value || '',
         mapLink: document.getElementById('propertyMap')?.value?.trim() || ''
     };
-    
-    // ✅ استخراج الإحداثيات من رابط الخريطة (مع await)
-    const coordinates = await extractCoordinatesFromMapLink(fields.mapLink);
-    console.log('📍 الإحداثيات المستخرجة:', coordinates);
 
     console.log('📋 القيم المدخلة:', fields);
 
